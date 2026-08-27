@@ -37,12 +37,12 @@ Robot manipulation rests on two mathematical primitives — forward kinematics (
 
 After completing the assignment, a student can:
 
-1. Derive and compose classic D-H homogeneous transforms into an end-effector pose.
-2. Construct a geometric Jacobian (`linear = z(i-1) × (p_end − p(i-1))`, `angular = z(i-1)`).
-3. Explain and tune damped-least-squares IK (damping, step rate, iteration budget, stopping threshold, joint-limit clipping).
-4. Explain why an FSM pipeline localizes kinematic failures to a specific state and check type.
-5. Model robot specifications and executions as structured RDF using CORA, SOMA, IEEE 1872 POS, and QUDT, with typed `xsd:double` literals instead of strings.
-6. Write SHACL node shapes with correct target classes, paths, inclusive thresholds, and message conventions — including a SHACL-SPARQL constraint for comparisons SHACL Core cannot express — and interpret SHACL validation reports.
+1. Model robot specifications and executions as structured RDF using CORA, SOMA, IEEE 1872 POS, and QUDT, with typed `xsd:double` literals instead of strings (Task 1).
+2. Write SHACL node shapes with correct target classes, paths, inclusive thresholds, and message conventions — including a SHACL-SPARQL constraint for comparisons SHACL Core cannot express — and interpret SHACL validation reports (Task 1).
+3. Derive and compose classic D-H homogeneous transforms into an end-effector pose (Task 2).
+4. Construct a geometric Jacobian (`linear = z(i-1) × (p_end − p(i-1))`, `angular = z(i-1)`) (Task 2).
+5. Explain and tune damped-least-squares IK (damping, step rate, iteration budget, stopping threshold, joint-limit clipping) (Task 3).
+6. Explain why an FSM pipeline localizes kinematic failures to a specific state and check type (Task 4).
 
 ### 1.4 Problem statement
 
@@ -50,7 +50,7 @@ First (Task 1) ground a reference FK/IK execution process into `data.ttl` reusin
 
 ### 1.5 Scope
 
-**In scope:** analytic FK, geometric Jacobian, iterative IK, reading/executing a provided FSM, RDF/Turtle authoring via provided serializers, SHACL node shapes with value-range constraints, and one SHACL-SPARQL constraint (cross-node joint-limit comparison).
+**In scope:** RDF/Turtle authoring via provided serializers, SHACL node shapes with value-range constraints and one SHACL-SPARQL constraint (cross-node joint-limit comparison), analytic FK, geometric Jacobian, iterative IK, and reading/executing a provided FSM.
 **Out of scope:** motion planning, collision avoidance, learned policies, OWL reasoning, SPARQL querying, dynamics/force control.
 
 ### 1.6 High-level workflow and expected final outcome
@@ -148,13 +148,13 @@ There is **no dataset, model, or checkpoint download**. All assets ship in the t
 
 | Asset              | Path                                                                                                      | Purpose                          |
 | ------------------ | --------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| Visible test cases | `test_case/{fk,ik}_test_case_{easy,medium,hard}.json`                                                   | Task 1/2 self-checks             |
-| Hidden test cases  | `test_case/{fk,ik}_test_case_{ta1,ta2}.json` — **kept off the release; TA adds at grading time** | Task 1/2 grading                 |
-| Ontology           | `semantic/ontology/hw3-ontology.ttl`                                                                    | REUSE vocabulary (offline stubs) |
+| Ontology           | `semantic/ontology/hw3-ontology.ttl`                                                                    | Task 1 REUSE vocabulary (offline stubs; documented in §4.4) |
 | TA dataset         | `semantic/ta-faulty-execution.ttl` (30 records)                                                         | Task 1 S3 input                  |
 | Answer key         | `semantic/ta-answer-key.json`                                                                           | Task 1 S3 expected flags         |
 | TA SHACL suite     | `semantic/ta-shapes-full.ttl`                                                                           | Task 1 S1/S2 grading shapes      |
-| Apache Jena        | `semantic/.cache/apache-jena-4.10.0/` (auto-downloaded)                                                 | `shacl` CLI                    |
+| Apache Jena        | `semantic/.cache/apache-jena-4.10.0/` (auto-downloaded)                                                 | Task 1 `shacl` CLI               |
+| Visible test cases | `test_case/{fk,ik}_test_case_{easy,medium,hard}.json`                                                   | Task 2/3 self-checks (FK part also feeds Task 1 grounding) |
+| Hidden test cases  | `test_case/{fk,ik}_test_case_{ta1,ta2}.json` — **kept off the release; TA adds at grading time** | Task 2/3 grading                 |
 
 Environment variables (all optional): `PYTHON` (interpreter used by `run_task1.sh`), `JENA_HOME` (pre-extracted Jena, skips download), `GROUND_SCRIPT` (TA-only grounding override, §7), `DISPLAY` (GUI modes).
 
@@ -224,13 +224,13 @@ hw3_template/
 
 | Symbol                                                                                        | File                    | Contract                                                                                                                   |
 | --------------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `robot_spec_to_triples(dh_params, joint_limits)`                                            | `ground_execution.py` | Task 1 TODO 1 — robot spec → Turtle lines                                                                                |
+| `ik_computation_to_triples(target_uri, joint_config, ik_status, residual, target_distance)` | `ground_execution.py` | Task 1 TODO 2 — one IK execution → Turtle lines                                                                          |
+| `pose_to_ttl` / `joint_config_to_ttl`                                                     | `semantic/common.py`  | Task 1 structured-node serializers students should call                                                                    |
 | `get_ur5_DH_params()`                                                                       | `fk.py`               | Returns the classic D-H table (authoritative)                                                                              |
-| `your_fk(DH_params, q, base_pos)`                                                           | `fk.py`               | Returns `(pose_7d, jacobian)`; the trailing `adjustment` block aligns to the simulator EE frame and must not be edited |
-| `your_ik(robot_id, new_pose, base_pos, max_iters=1000, stop_thresh=0.001)`                  | `ik.py`               | Returns 6 joint angles; grading passes**default arguments only**                                                     |
-| `FSMPipeline.move_to(state, position)`                                                      | `fsm_task.py`         | One motion = IK solve → position control → IK check (≤ 3 cm) → FK check (≤ 1 cm); up to 3 warm-started re-solves      |
-| `robot_spec_to_triples(dh_params, joint_limits)`                                            | `ground_execution.py` | TODO 1 — robot spec → Turtle lines                                                                                       |
-| `ik_computation_to_triples(target_uri, joint_config, ik_status, residual, target_distance)` | `ground_execution.py` | TODO 2 — one IK execution → Turtle lines                                                                                 |
-| `pose_to_ttl` / `joint_config_to_ttl`                                                     | `semantic/common.py`  | Structured-node serializers students should call                                                                           |
+| `your_fk(DH_params, q, base_pos)`                                                           | `fk.py`               | Task 2 — returns `(pose_7d, jacobian)`; the trailing `adjustment` block aligns to the simulator EE frame and must not be edited |
+| `your_ik(robot_id, new_pose, base_pos, max_iters=1000, stop_thresh=0.001)`                  | `ik.py`               | Task 3 — returns 6 joint angles; grading passes **default arguments only**                                               |
+| `FSMPipeline.move_to(state, position)`                                                      | `fsm_task.py`         | Task 4 — one motion = IK solve → position control → IK check (≤ 3 cm) → FK check (≤ 1 cm); up to 3 warm-started re-solves |
 
 ### 4.3 Data and execution flow
 
@@ -257,6 +257,81 @@ flowchart LR
 ```
 
 `run_task1.sh` steps: (1) toolchain check → (2) Jena download/cache → (3) grounding (TA reference solvers by default; `--own` uses the student solvers) → (4) three `shacl validate` runs → (5) scoring.
+
+### 4.4 Ontology definition reference (`semantic/ontology/hw3-ontology.ttl`)
+
+The single authority for the Task 1 vocabulary. Design rule (stated in the file's `owl:Ontology` header): **REUSE existing standard vocabularies wherever a suitable term exists; mint `hw3:` terms only for course-specific concepts no standard covers.** External terms are declared as **minimal local stubs with their ORIGINAL IRIs** (official CORA/SOMA/DUL files are not guaranteed to resolve on grading machines) — `hw3:` never redefines them.
+
+**Namespaces**
+
+| Prefix | IRI | Role |
+| --- | --- | --- |
+| `hw3:` | `http://taica.course/hw3/ontology#` | Course-minted classes/properties + fixed target instances (`hw3:target_near/mid/far`) |
+| `stu:` | (data namespace, declared in `data.ttl`) | Student-produced instances (robot, joints, computations) |
+| `probe:` | `http://taica.course/hw3/data/probe#` | TA dataset instances in `ta-faulty-execution.ttl` |
+| `cora:` | `http://purl.org/ieee1872-owl/cora-bare#` | IEEE 1872 CORA — robots |
+| `soma:` | `http://www.ease-crc.org/ont/SOMA.owl#` | SOMA — joints, joint states, 6D poses |
+| `pos:` | `http://purl.org/ieee1872-owl/pos#` | IEEE 1872 POS — position/orientation/pose |
+| `dul:` | `http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#` | DOLCE+DnS Ultralite — upper-level alignment |
+| `qudt:` / `unit:` | `http://qudt.org/schema/qudt/` / `http://qudt.org/vocab/unit/` | Units: `qudt:hasUnit unit:M` / `unit:RAD` |
+
+**Classes**
+
+| Class | Origin | Notes |
+| --- | --- | --- |
+| `cora:Robot` | reused | The UR5 individual (`stu:my_ur5`) |
+| `soma:Joint`, `soma:RevoluteJoint` | reused | `RevoluteJoint ⊑ Joint`; the six joint individuals |
+| `soma:JointState` | reused | One angle of one joint at one moment |
+| `soma:6DPose` | reused | `⊑ dul:Region`, `⊑ pos:Pose`; every pose node |
+| `hw3:KinematicComputation` | minted | `⊑ dul:Event` — a computation is an occurrence |
+| `hw3:FKComputation`, `hw3:IKComputation` | minted | `⊑ hw3:KinematicComputation` |
+| `hw3:JointConfiguration` | minted | Aggregation of **exactly one `soma:JointState` per joint** (six for the UR5) |
+| `hw3:QuaternionOrientation` | minted | `⊑ pos:Orientation`; carries `hasQuatX/Y/Z/W` |
+
+**Properties — robot specification** (attached to the reused classes; D-H parameterization is course convention, hence `hw3:`)
+
+| Property | Domain → Range | Notes |
+| --- | --- | --- |
+| `hw3:hasJoint` | `cora:Robot` → `soma:Joint` | `⊑ dul:hasComponent` |
+| `hw3:hasDoF` | `cora:Robot` → `xsd:integer` | 6 |
+| `hw3:jointIndex` | `soma:Joint` → `xsd:integer` | 1-based |
+| `hw3:dh_a` / `hw3:dh_d` / `hw3:dh_alpha` | `soma:Joint` → `xsd:double` | Classic D-H (m / m / rad) |
+| `hw3:hasJointLowerLimit` / `hw3:hasJointUpperLimit` | `soma:Joint` → `xsd:double` | Read by the joint-limit SHACL-SPARQL shape (student TODO 3 and `ta-shapes-full.ttl`) |
+
+**Properties — kinematic computations**
+
+| Property | Domain → Range | Downstream consumer |
+| --- | --- | --- |
+| `hw3:computedForRobot` | computation → `cora:Robot` | `⊑ dul:involvesAgent`; STRUCTURE shapes |
+| `hw3:solvesForTarget` | `hw3:IKComputation` → `soma:6DPose` | `⊑ dul:hasRegion`; links to `hw3:target_*` |
+| `hw3:hasInputJointConfiguration` | FK → `hw3:JointConfiguration` | STRUCTURE shapes (exactly 6 states) |
+| `hw3:hasJointConfiguration` | IK → `hw3:JointConfiguration` | STRUCTURE shapes + joint-limit shape |
+| `hw3:hasEndEffectorPose` | computation → `soma:6DPose` | STRUCTURE shapes (position component present) |
+| `hw3:hasIKStatus` | IK → `xsd:string` | `SOLVED` / `OUT_OF_REACH` / `NO_CONVERGENCE` / `JOINT_LIMIT_VIOLATION` |
+| `hw3:hasResidual` | computation → `xsd:double` | **NO_CONVERGENCE shape, threshold 0.02** |
+| `hw3:hasTargetDistance` | IK → `xsd:double` | **ARM_OUT_OF_RANGE shape, threshold 0.90** (shoulder-to-target metres) |
+| `hw3:hasPoseError` / `hw3:hasJacobianError` | FK → `xsd:double` | **FK_INACCURATE shape (0.005)** / documented threshold 0.05 |
+| `hw3:producedBy` | any → `xsd:string` | Provenance (`--group` / `--student-id` value); what lets independently produced graphs merge and stay distinguishable |
+
+**Structured-node graph patterns** (emitted by `common.pose_to_ttl` / `common.joint_config_to_ttl` — the reason no JSON strings are needed):
+
+```
+stu:ik_target_near_q a hw3:JointConfiguration ;
+    hw3:hasJointState stu:..._q_j1 , ... , stu:..._q_j6 .          # exactly 6
+stu:..._q_j1 a soma:JointState ;
+    soma:hasJointPosition "-1.57"^^xsd:double ;
+    qudt:hasUnit unit:RAD ;
+    hw3:isStateOfJoint stu:my_ur5_joint1 .                          # back-link to the joint (with D-H + limits)
+
+stu:fk_case_0_ee a soma:6DPose ;
+    hw3:hasPositionComponent [ a pos:Position ; hw3:hasPositionX/Y/Z "…"^^xsd:double ; qudt:hasUnit unit:M ] ;
+    hw3:hasOrientationComponent [ a hw3:QuaternionOrientation ; hw3:hasQuatX/Y/Z/W "…"^^xsd:double ] ;
+    hw3:hasReferenceFrame "world" .
+```
+
+**Literal-typing rule** (enforced by the `STRUCTURE:*` shapes): every float is written `"0.0892"^^xsd:double` — a bare `0.0892` in Turtle is `xsd:decimal`, conflicts with the declared `xsd:double` ranges, and is the single most common S1 deduction.
+
+**Ontology vs SHACL division of labour**: the ontology declares vocabulary and alignment only — it contains **no numeric thresholds and no cardinality enforcement**. All checking is closed-world SHACL: `ta-shapes-full.ttl` enforces structure (types, required properties, `xsd:double` typing, exactly-6 joint states) and the student's `shapes.ttl` enforces the three problem thresholds. When editing the ontology, keep this split — never move a threshold into an OWL axiom (OWL cannot compare numbers).
 
 ---
 
@@ -305,13 +380,13 @@ The assignment grades **behavior, not code style**: every point is tied to a pro
 
 | Category        | Description                                        |        Points | Full credit                  | Partial credit                                   | Zero credit                                                  |
 | --------------- | -------------------------------------------------- | ------------: | ---------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| Task 1 S1       | Grounding structure (STRUCTURE shapes)             |            12 | 0 violations                 | −2 per violation, floor 0                       | ≥ 6 violations or no `data.ttl`                           |
+| Task 1 S2       | Problem detection on own data                      |             8 | All four checks pass         | +2 per passing check                             | No check passes                                              |
+| Task 1 S3       | Own shapes vs TA dataset & answer key              |            10 | faulty 14/14 and clean 16/16 | `8×(faulty hit rate) + 2×(clean hit rate)`   | No matching record                                           |
 | Task 2 FK       | Pose accuracy on hidden cases                      |            10 | 0 errors on all files        | Automatic: per-error deduction, floor 0 per file | Component zero when ≥ 30 % of a file's cases err (per file) |
 | Task 2 Jacobian | Jacobian accuracy                                  |            10 | Same                         | Same                                             | Same                                                         |
 | Task 3 IK       | Executed-pose accuracy, default args, hidden cases |            40 | 0 errors on all files        | Automatic per-error deduction                    | Same mechanism                                               |
 | Task 4 FSM      | Successful seeded episodes                         |            10 | 10/10 SUCCESS                | `10 × successes / 10`                         | 0 successes                                                  |
-| Task 1 S1       | Grounding structure (STRUCTURE shapes)             |            12 | 0 violations                 | −2 per violation, floor 0                       | ≥ 6 violations or no `data.ttl`                           |
-| Task 1 S2       | Problem detection on own data                      |             8 | All four checks pass         | +2 per passing check                             | No check passes                                              |
-| Task 1 S3       | Own shapes vs TA dataset & answer key              |            10 | faulty 14/14 and clean 16/16 | `8×(faulty hit rate) + 2×(clean hit rate)`   | No matching record                                           |
 | **Total** |                                                    | **100** |                              |                                                  |                                                              |
 
 ### 6.3 Automated grading
