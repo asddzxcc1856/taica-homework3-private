@@ -8,10 +8,9 @@ NYCU Physical AI / TAICA — Homework 3
 
 Document map:
 
-| Document                           | Audience                        | Location                   |
-| ---------------------------------- | ------------------------------- | -------------------------- |
+| Document                             | Audience                        | Location                     |
+| ------------------------------------ | ------------------------------- | ---------------------------- |
 | `STUDENT_GUIDE.md`                 | Students                        | `hw3_template/` (released) |
-| `SPEC.md`                          | Students (short-form task spec) | `hw3_template/` (released) |
 | `TA_INTERNAL_GUIDE.md` (this file) | TAs / instructors               | `hw3_demo/` (internal)     |
 
 ---
@@ -81,18 +80,18 @@ Total                            100/100
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
 | Operating system          | Linux; Ubuntu 20.04+ is what the assignment is verified on. macOS/Windows are untested for release (Instructor Confirmation Required before advertising support) | Required            |
 | CPU                       | Any x86_64 CPU able to run PyBullet real-time physics; no specific model required                                                                                | Required            |
-| GPU                       | **Not used.** No CUDA, no cuDNN, no deep-learning framework                                                                                                      | Not applicable      |
+| GPU                       | **Not used.** No CUDA, no cuDNN, no deep-learning framework                                                                                                | Not applicable      |
 | RAM                       | No formal minimum measured; the pipeline runs comfortably on typical lab machines (TBD if a formal figure is needed)                                             | —                  |
 | Storage                   | < 1 GB total (repo + conda env + ~30 MB Jena cache)                                                                                                              | Required            |
 | Python                    | 3.7, in a dedicated conda environment                                                                                                                            | Required            |
-| Python packages           | `pybullet`, `numpy`, `scipy` (no version pins; verified with the builds pip resolves for Python 3.7)                                                             | Required            |
-| Java                      | JDK 11+ (only for Task 4's Jena`shacl` CLI)                                                                                                                      | Required            |
-| Apache Jena               | 4.10.0, auto-downloaded and cached by`run_task4.sh`                                                                                                              | Required (auto)     |
+| Python packages           | `pybullet`, `numpy`, `scipy` (no version pins; verified with the builds pip resolves for Python 3.7)                                                       | Required            |
+| Java                      | JDK 11+ (only for Task 4's Jena `shacl` CLI)                                                                                                                   | Required            |
+| Apache Jena               | 4.10.0, auto-downloaded and cached by `run_task4.sh`                                                                                                           | Required (auto)     |
 | Docker                    | Not used                                                                                                                                                         | Not applicable      |
 | Conda (Miniconda)         | Environment manager                                                                                                                                              | Recommended         |
 | VS Code or similar editor | —                                                                                                                                                               | Optional            |
 | Network                   | Needed once: pip installs + one ~30 MB Jena download; fully offline afterwards                                                                                   | Required (one-time) |
-| X display                 | Only for the optional`-g` GUI modes (`DISPLAY` must be set; lab machines use `:1`)                                                                               | Optional            |
+| X display                 | Only for the optional `-g` GUI modes (`DISPLAY` must be set; lab machines use `:1`)                                                                        | Optional            |
 
 ---
 
@@ -122,11 +121,11 @@ cd <repo>/hw3_template      # the released student tree; TAs also use hw3_demo/
 
 No submodules and no special branches are required. The relevant trees:
 
-| Tree                      | Content                                                                 |
-| ------------------------- | ----------------------------------------------------------------------- |
-| `hw3_template/`           | Released student version (STUDENT TODO stubs; provenance flag`--group`) |
-| `hw3_demo/`               | Fully solved TA verification copy (provenance flag`--student-id`)       |
-| `hw3_semantic/solutions/` | Drop-in reference solutions (see §7) — never distribute               |
+| Tree                        | Content                                                                    |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `hw3_template/`           | Released student version (STUDENT TODO stubs; provenance flag `--group`) |
+| `hw3_demo/`               | Fully solved TA verification copy (provenance flag `--student-id`)       |
+| `hw3_semantic/solutions/` | Drop-in reference solutions (see §7) — never distribute                  |
 
 ### 3.3 Dependency installation
 
@@ -144,28 +143,28 @@ No CUDA-related dependencies exist. The simulation stack (`pybullet_robot_envs`,
 
 There is **no dataset, model, or checkpoint download**. All assets ship in the tree:
 
-| Asset              | Path                                                                                              | Purpose                          |
-| ------------------ | ------------------------------------------------------------------------------------------------- | -------------------------------- |
-| Visible test cases | `test_case/{fk,ik}_test_case_{easy,medium,hard}.json`                                             | Task 1/2 self-checks             |
+| Asset              | Path                                                                                                      | Purpose                          |
+| ------------------ | --------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| Visible test cases | `test_case/{fk,ik}_test_case_{easy,medium,hard}.json`                                                   | Task 1/2 self-checks             |
 | Hidden test cases  | `test_case/{fk,ik}_test_case_{ta1,ta2}.json` — **kept off the release; TA adds at grading time** | Task 1/2 grading                 |
-| Ontology           | `semantic/ontology/hw3-ontology.ttl`                                                              | REUSE vocabulary (offline stubs) |
-| TA dataset         | `semantic/ta-faulty-execution.ttl` (24 records)                                                   | Task 4 S3 input                  |
-| Answer key         | `semantic/ta-answer-key.json`                                                                     | Task 4 S3 expected flags         |
-| TA SHACL suite     | `semantic/ta-shapes-full.ttl`                                                                     | Task 4 S1/S2 grading shapes      |
-| Apache Jena        | `semantic/.cache/apache-jena-4.10.0/` (auto-downloaded)                                           | `shacl` CLI                      |
+| Ontology           | `semantic/ontology/hw3-ontology.ttl`                                                                    | REUSE vocabulary (offline stubs) |
+| TA dataset         | `semantic/ta-faulty-execution.ttl` (24 records)                                                         | Task 4 S3 input                  |
+| Answer key         | `semantic/ta-answer-key.json`                                                                           | Task 4 S3 expected flags         |
+| TA SHACL suite     | `semantic/ta-shapes-full.ttl`                                                                           | Task 4 S1/S2 grading shapes      |
+| Apache Jena        | `semantic/.cache/apache-jena-4.10.0/` (auto-downloaded)                                                 | `shacl` CLI                    |
 
 Environment variables (all optional): `PYTHON` (interpreter used by `run_task4.sh`), `JENA_HOME` (pre-extracted Jena, skips download), `GROUND_SCRIPT` (TA-only grounding override, §7), `DISPLAY` (GUI modes).
 
 ### 3.5 Environment verification
 
-| Check                         | Command                                                  | Expected                            |
-| ----------------------------- | -------------------------------------------------------- | ----------------------------------- |
+| Check                         | Command                                                    | Expected                              |
+| ----------------------------- | ---------------------------------------------------------- | ------------------------------------- |
 | Python env                    | `python --version`                                       | `Python 3.7.x`                      |
 | Packages                      | `python -c "import pybullet, numpy, scipy; print('OK')"` | `OK` (plus a PyBullet build banner) |
-| GPU/CUDA                      | —                                                       | Not applicable                      |
-| Java                          | `java -version`                                          | version 11+                         |
-| Test cases                    | `ls test_case/`                                          | six`*_easy/medium/hard.json` files  |
-| Semantic assets               | `ls semantic/ta-*.ttl semantic/ta-answer-key.json`       | three files listed                  |
+| GPU/CUDA                      | —                                                         | Not applicable                        |
+| Java                          | `java -version`                                          | version 11+                           |
+| Test cases                    | `ls test_case/`                                          | six `*_easy/medium/hard.json` files |
+| Semantic assets               | `ls semantic/ta-*.ttl semantic/ta-answer-key.json`       | three files listed                    |
 | Jena (after first Task 4 run) | `ls semantic/.cache/`                                    | `apache-jena-4.10.0`                |
 
 ### 3.6 End-to-end verification (TA)
@@ -219,15 +218,15 @@ hw3_template/
 
 ### 4.2 Key interfaces
 
-| Symbol                                                                                      | File                  | Contract                                                                                                              |
-| ------------------------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `get_ur5_DH_params()`                                                                       | `fk.py`               | Returns the classic D-H table (authoritative)                                                                         |
-| `your_fk(DH_params, q, base_pos)`                                                           | `fk.py`               | Returns`(pose_7d, jacobian)`; the trailing `adjustment` block aligns to the simulator EE frame and must not be edited |
-| `your_ik(robot_id, new_pose, base_pos, max_iters=1000, stop_thresh=0.001)`                  | `ik.py`               | Returns 6 joint angles; grading passes**default arguments only**                                                      |
-| `FSMPipeline.move_to(state, position)`                                                      | `fsm_task.py`         | One motion = IK solve → position control → IK check (≤ 3 cm) → FK check (≤ 1 cm); up to 3 warm-started re-solves |
-| `robot_spec_to_triples(dh_params, joint_limits)`                                            | `ground_execution.py` | TODO 1 — robot spec → Turtle lines                                                                                  |
-| `ik_computation_to_triples(target_uri, joint_config, ik_status, residual, target_distance)` | `ground_execution.py` | TODO 2 — one IK execution → Turtle lines                                                                            |
-| `pose_to_ttl` / `joint_config_to_ttl`                                                       | `semantic/common.py`  | Structured-node serializers students should call                                                                      |
+| Symbol                                                                                        | File                    | Contract                                                                                                                   |
+| --------------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `get_ur5_DH_params()`                                                                       | `fk.py`               | Returns the classic D-H table (authoritative)                                                                              |
+| `your_fk(DH_params, q, base_pos)`                                                           | `fk.py`               | Returns `(pose_7d, jacobian)`; the trailing `adjustment` block aligns to the simulator EE frame and must not be edited |
+| `your_ik(robot_id, new_pose, base_pos, max_iters=1000, stop_thresh=0.001)`                  | `ik.py`               | Returns 6 joint angles; grading passes**default arguments only**                                                     |
+| `FSMPipeline.move_to(state, position)`                                                      | `fsm_task.py`         | One motion = IK solve → position control → IK check (≤ 3 cm) → FK check (≤ 1 cm); up to 3 warm-started re-solves      |
+| `robot_spec_to_triples(dh_params, joint_limits)`                                            | `ground_execution.py` | TODO 1 — robot spec → Turtle lines                                                                                       |
+| `ik_computation_to_triples(target_uri, joint_config, ik_status, residual, target_distance)` | `ground_execution.py` | TODO 2 — one IK execution → Turtle lines                                                                                 |
+| `pose_to_ttl` / `joint_config_to_ttl`                                                     | `semantic/common.py`  | Structured-node serializers students should call                                                                           |
 
 ### 4.3 Data and execution flow
 
@@ -298,16 +297,16 @@ The assignment grades **behavior, not code style**: every point is tied to a pro
 
 ### 6.2 Grading rubric (total 100)
 
-| Category        | Description                                        |  Points | Full credit                  | Partial credit                                   | Zero credit                                                  |
-| --------------- | -------------------------------------------------- | ------: | ---------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
-| Task 1 FK       | Pose accuracy on hidden cases                      |      10 | 0 errors on all files        | Automatic: per-error deduction, floor 0 per file | Component zero when ≥ 30 % of a file's cases err (per file) |
-| Task 1 Jacobian | Jacobian accuracy                                  |      10 | Same                         | Same                                             | Same                                                         |
-| Task 2 IK       | Executed-pose accuracy, default args, hidden cases |      40 | 0 errors on all files        | Automatic per-error deduction                    | Same mechanism                                               |
-| Task 3 FSM      | Successful seeded episodes                         |      10 | 10/10 SUCCESS                | `10 × successes / 10`                           | 0 successes                                                  |
-| Task 4 S1       | Grounding structure (STRUCTURE shapes)             |      12 | 0 violations                 | −2 per violation, floor 0                       | ≥ 6 violations or no`data.ttl`                              |
-| Task 4 S2       | Problem detection on own data                      |       8 | All four checks pass         | +2 per passing check                             | No check passes                                              |
-| Task 4 S3       | Own shapes vs TA dataset & answer key              |      10 | faulty 11/11 and clean 13/13 | `8×(faulty hit rate) + 2×(clean hit rate)`     | No matching record                                           |
-| **Total**       |                                                    | **100** |                              |                                                  |                                                              |
+| Category        | Description                                        |        Points | Full credit                  | Partial credit                                   | Zero credit                                                  |
+| --------------- | -------------------------------------------------- | ------------: | ---------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| Task 1 FK       | Pose accuracy on hidden cases                      |            10 | 0 errors on all files        | Automatic: per-error deduction, floor 0 per file | Component zero when ≥ 30 % of a file's cases err (per file) |
+| Task 1 Jacobian | Jacobian accuracy                                  |            10 | Same                         | Same                                             | Same                                                         |
+| Task 2 IK       | Executed-pose accuracy, default args, hidden cases |            40 | 0 errors on all files        | Automatic per-error deduction                    | Same mechanism                                               |
+| Task 3 FSM      | Successful seeded episodes                         |            10 | 10/10 SUCCESS                | `10 × successes / 10`                         | 0 successes                                                  |
+| Task 4 S1       | Grounding structure (STRUCTURE shapes)             |            12 | 0 violations                 | −2 per violation, floor 0                       | ≥ 6 violations or no `data.ttl`                           |
+| Task 4 S2       | Problem detection on own data                      |             8 | All four checks pass         | +2 per passing check                             | No check passes                                              |
+| Task 4 S3       | Own shapes vs TA dataset & answer key              |            10 | faulty 11/11 and clean 13/13 | `8×(faulty hit rate) + 2×(clean hit rate)`   | No matching record                                           |
+| **Total** |                                                    | **100** |                              |                                                  |                                                              |
 
 ### 6.3 Automated grading
 
@@ -332,17 +331,17 @@ Only the report is manually graded (weight within the 100 points: **TBD — Inst
 
 ### 6.5 Common grading cases
 
-| Case                                                                                                   | Ruling                                                                                                                                                                                                                                                                          |
-| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Correct implementation, wrong file layout                                                              | Restore the four student files into a clean template copy and re-run; no penalty for stray extra files. Missing required file → that task scores 0.                                                                                                                            |
-| Minor numerical error                                                                                  | Already priced in by thresholds and per-case penalties; do not re-judge manually.                                                                                                                                                                                               |
-| Hard-coded outputs (e.g.,`your_fk` returns memorized ground truth; flags written into reports by hand) | Hidden test cases defeat FK/IK memorization. For Task 4, flags must originate from SHACL reports —`score_semantic.py` only reads reports, and hand-edited `output/` files are regenerated at grading time. Confirmed hard-coding = academic-integrity case → escalate (§12). |
-| Missing edge cases (e.g., shapes with`maxExclusive`)                                                   | Automatic: boundary records in the S3 dataset deduct exactly (reference gradients: correct 10.0,`maxExclusive` 9.7, empty TODOs 4.2).                                                                                                                                           |
-| Partial implementation                                                                                 | Run everything anyway; scorers award earned fractions (e.g., FK done but IK stub → Task 1 + S1/S3-partial still score).                                                                                                                                                        |
-| Code does not execute                                                                                  | Reproduce once, check §8/§9 for environment causes; if the crash is in student code, that task = 0. Quote the traceback in feedback.                                                                                                                                          |
-| Dependency/environment problem                                                                         | Grade on the standard grading environment only. If it runs there, full marks stand; if the student's code depends on a nonstandard package, it fails (allowed imports: numpy / scipy / stdlib; pybullet only where permitted).                                                  |
-| Modified protected files                                                                               | Grading always re-assembles:**only** `fk.py`, `ik.py`, `semantic/ground_execution.py`, `semantic/shapes.ttl` are copied from the submission into a pristine template. Any edits to protected files are thereby ignored; deliberate tampering to inflate scores → escalate.     |
-| Task 3`GRASP_FAILED` / `PLACE_MISS`                                                                    | Suction physics is rarely flaky: re-run once; only a reproducible failure counts.`IK_MISS` / `FK_MISMATCH` are deterministic — no re-run needed.                                                                                                                               |
+| Case                                                                                                     | Ruling                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Correct implementation, wrong file layout                                                                | Restore the four student files into a clean template copy and re-run; no penalty for stray extra files. Missing required file → that task scores 0.                                                                                                                                      |
+| Minor numerical error                                                                                    | Already priced in by thresholds and per-case penalties; do not re-judge manually.                                                                                                                                                                                                         |
+| Hard-coded outputs (e.g.,`your_fk` returns memorized ground truth; flags written into reports by hand) | Hidden test cases defeat FK/IK memorization. For Task 4, flags must originate from SHACL reports —`score_semantic.py` only reads reports, and hand-edited `output/` files are regenerated at grading time. Confirmed hard-coding = academic-integrity case → escalate (§12).       |
+| Missing edge cases (e.g., shapes with `maxExclusive`)                                                  | Automatic: boundary records in the S3 dataset deduct exactly (reference gradients: correct 10.0,`maxExclusive` 9.7, empty TODOs 4.2).                                                                                                                                                   |
+| Partial implementation                                                                                   | Run everything anyway; scorers award earned fractions (e.g., FK done but IK stub → Task 1 + S1/S3-partial still score).                                                                                                                                                                  |
+| Code does not execute                                                                                    | Reproduce once, check §8/§9 for environment causes; if the crash is in student code, that task = 0. Quote the traceback in feedback.                                                                                                                                                    |
+| Dependency/environment problem                                                                           | Grade on the standard grading environment only. If it runs there, full marks stand; if the student's code depends on a nonstandard package, it fails (allowed imports: numpy / scipy / stdlib; pybullet only where permitted).                                                            |
+| Modified protected files                                                                                 | Grading always re-assembles:**only** `fk.py`, `ik.py`, `semantic/ground_execution.py`, `semantic/shapes.ttl` are copied from the submission into a pristine template. Any edits to protected files are thereby ignored; deliberate tampering to inflate scores → escalate. |
+| Task 3 `GRASP_FAILED` / `PLACE_MISS`                                                                 | Suction physics is rarely flaky: re-run once; only a reproducible failure counts.`IK_MISS` / `FK_MISMATCH` are deterministic — no re-run needed.                                                                                                                                     |
 
 ---
 
@@ -352,12 +351,12 @@ Only the report is manually graded (weight within the 100 points: **TBD — Inst
 
 ### 7.1 Reference implementations
 
-| File (in`hw3_semantic/solutions/`) | Replaces                           | Notes                                                    |
-| ---------------------------------- | ---------------------------------- | -------------------------------------------------------- |
-| `fk_solution.py`                   | `fk.py`                            | Classic D-H chain + geometric Jacobian                   |
-| `ik_solution.py`                   | `ik.py`                            | DLS, damping 0.05, step rate 0.5, 6-D error              |
-| `ground_solutions.py`              | the two`ground_execution.py` TODOs | Injected via`GROUND_SCRIPT` env var — no file overwrite |
-| `shapes_solution.ttl`              | `semantic/shapes.ttl`              | Both problem shapes                                      |
+| File (in `hw3_semantic/solutions/`) | Replaces                              | Notes                                                       |
+| ------------------------------------- | ------------------------------------- | ----------------------------------------------------------- |
+| `fk_solution.py`                    | `fk.py`                             | Classic D-H chain + geometric Jacobian                      |
+| `ik_solution.py`                    | `ik.py`                             | DLS, damping 0.05, step rate 0.5, 6-D error                 |
+| `ground_solutions.py`               | the two `ground_execution.py` TODOs | Injected via `GROUND_SCRIPT` env var — no file overwrite |
+| `shapes_solution.ttl`               | `semantic/shapes.ttl`               | Both problem shapes                                         |
 
 `hw3_demo/` is a fully solved tree kept permanently for verification.
 
@@ -402,20 +401,20 @@ Each task completes within minutes on a standard lab desktop (CPU only). No form
 
 ## 8. Known Issues and Troubleshooting
 
-| #  | Symptom / message                                                           | Cause                                                                                     | Diagnosis & fix                                                                                                       | Affects grading?                             |
-| -- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| 1  | Task 1/2 GUI: arm never moves                                               | Old PyBullet GUI does not re-render on`resetJointState` alone                             | Release code already does reset + motor retarget +`stepSimulation`; if broken, the student edited the visualize block | No (visual only)                             |
-| 2  | `NotImplementedError` in STEP 3 of `run_task4.sh` before Tasks 1/2 are done | Expected — grounding calls`your_fk`/`your_ik`                                            | Not a bug; STEP 1–2 passing means the environment is fine                                                            | No                                           |
-| 3  | Jena download fails (firewall/offline)                                      | STEP 2 network fetch                                                                      | Extract Jena 4.10.0 manually,`export JENA_HOME=`                                                                | No — provide the workaround                 |
-| 4  | `IK_MISS` fixed at 3–7 cm in FSM regardless of retries                     | Target outside the reliable workspace; DLS converges to a joint-limit-clipped fixed point | Only occurs if someone widened the sampling range (`x > 0.48`) — never do this; release range is safe                | Yes if release files tampered; otherwise N/A |
-| 5  | `NO_CONTACT in DESCEND_TO_PICK`                                             | Systematic EE height bias, usually a modified FK`adjustment` block                        | Diff the student's`fk.py` tail against the release                                                                    | Yes (student bug)                            |
-| 6  | Occasional`GRASP_FAILED` / `PLACE_MISS` with correct kinematics             | Suction-contact physics flakiness                                                         | Re-run once; count only reproducible failures                                                                         | Re-run policy §6.5                          |
-| 7  | `[S3] … missing FAIL` or scorer finds 0 results despite violations         | SHACL report parsing: Jena writes`rdf:type sh:ValidationResult`                           | Already handled by the scorer regex; only recurs if someone swaps Jena versions with a different report style         | Would — keep Jena pinned at 4.10.0          |
-| 8  | STRUCTURE violations about datatypes                                        | Untyped literal (`0.0892`) instead of `"0.0892"^^xsd:double`                              | Message in`ta-validation.ttl` names the property                                                                      | Automatic S1 deduction (correct behavior)    |
-| 9  | `bash: … No such file or directory` during grading sessions                | Shell cwd persists between commands                                                       | Always`cd` to the tree root or use absolute paths                                                                     | No                                           |
-| 10 | GUI:`cannot connect to X server`                                            | No display (SSH session)                                                                  | Use headless modes (default) or`DISPLAY=:1` on the lab box                                                            | No                                           |
-| 11 | `pip install pybullet` build failure on non-Linux / wrong Python            | Unsupported platform or Python ≠ 3.7                                                     | Recreate the conda env with Python 3.7 on Linux                                                                       | Environment-side                             |
-| 12 | Version conflicts / CUDA / Docker / dataset-path issues                     | —                                                                                        | Not applicable: no CUDA, no Docker, no downloads                                                                      | —                                           |
+| #  | Symptom / message                                                               | Cause                                                                                     | Diagnosis & fix                                                                                                         | Affects grading?                             |
+| -- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| 1  | Task 1/2 GUI: arm never moves                                                   | Old PyBullet GUI does not re-render on `resetJointState` alone                          | Release code already does reset + motor retarget +`stepSimulation`; if broken, the student edited the visualize block | No (visual only)                             |
+| 2  | `NotImplementedError` in STEP 3 of `run_task4.sh` before Tasks 1/2 are done | Expected — grounding calls `your_fk`/`your_ik`                                       | Not a bug; STEP 1–2 passing means the environment is fine                                                              | No                                           |
+| 3  | Jena download fails (firewall/offline)                                          | STEP 2 network fetch                                                                      | Extract Jena 4.10.0 manually,`export JENA_HOME=`                                                                      | No — provide the workaround                 |
+| 4  | `IK_MISS` fixed at 3–7 cm in FSM regardless of retries                       | Target outside the reliable workspace; DLS converges to a joint-limit-clipped fixed point | Only occurs if someone widened the sampling range (`x > 0.48`) — never do this; release range is safe                | Yes if release files tampered; otherwise N/A |
+| 5  | `NO_CONTACT in DESCEND_TO_PICK`                                               | Systematic EE height bias, usually a modified FK `adjustment` block                     | Diff the student's `fk.py` tail against the release                                                                   | Yes (student bug)                            |
+| 6  | Occasional `GRASP_FAILED` / `PLACE_MISS` with correct kinematics            | Suction-contact physics flakiness                                                         | Re-run once; count only reproducible failures                                                                           | Re-run policy §6.5                          |
+| 7  | `[S3] … missing FAIL` or scorer finds 0 results despite violations           | SHACL report parsing: Jena writes `rdf:type sh:ValidationResult`                        | Already handled by the scorer regex; only recurs if someone swaps Jena versions with a different report style           | Would — keep Jena pinned at 4.10.0          |
+| 8  | STRUCTURE violations about datatypes                                            | Untyped literal (`0.0892`) instead of `"0.0892"^^xsd:double`                          | Message in `ta-validation.ttl` names the property                                                                     | Automatic S1 deduction (correct behavior)    |
+| 9  | `bash: … No such file or directory` during grading sessions                  | Shell cwd persists between commands                                                       | Always `cd` to the tree root or use absolute paths                                                                    | No                                           |
+| 10 | GUI:`cannot connect to X server`                                              | No display (SSH session)                                                                  | Use headless modes (default) or `DISPLAY=:1` on the lab box                                                           | No                                           |
+| 11 | `pip install pybullet` build failure on non-Linux / wrong Python              | Unsupported platform or Python ≠ 3.7                                                     | Recreate the conda env with Python 3.7 on Linux                                                                         | Environment-side                             |
+| 12 | Version conflicts / CUDA / Docker / dataset-path issues                         | —                                                                                        | Not applicable: no CUDA, no Docker, no downloads                                                                        | —                                           |
 
 ---
 
@@ -451,18 +450,18 @@ Information to request from the student (verbatim checklist):
 
 ## 10. TA-Facing FAQ
 
-| Question                                                     | Answer                                                                                                                                                                                                                             |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Question                                                     | Answer                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Allowed libraries?                                           | `numpy`, `scipy`, Python stdlib. `pybullet` only where the template already uses it; **not** for computing FK/IK answers (`getLinkState`, `calculateInverseKinematics`, `calculateJacobian` are forbidden in `your_fk`/`your_ik`). |
-| Other frameworks (PyTorch, ROS, …)?                         | Not permitted; the grading environment does not have them.                                                                                                                                                                         |
-| Which files may students modify?                             | Exactly four (§4.1); everything else is re-assembled from the pristine release at grading time.                                                                                                                                   |
-| External resources?                                          | Reading references is fine; submitted code must be their own (course policy details: TBD — Instructor Confirmation Required).                                                                                                     |
-| AI coding tools?                                             | Course policy:**TBD — Instructor Confirmation Required.** Until confirmed, direct students to the course's general policy.                                                                                                        |
-| Student has no GPU / weak hardware?                          | Irrelevant — CPU-only assignment.                                                                                                                                                                                                 |
-| Numerical tolerance disputes?                                | Thresholds are fixed in released code (0.005 / 0.05 / 0.02 m; FSM 3 cm / 1 cm / 6 cm; SHACL 0.90 / 0.02 / 0.005). Not negotiable per-student.                                                                                      |
-| Runtime complaints?                                          | No formal limit; advise sane iteration budgets (reference: 1000 iterations, threshold 0.001).                                                                                                                                      |
-| Submission platform / deadline / late & resubmission policy? | **TBD — Instructor Confirmation Required.**                                                                                                                                                                                       |
-| Academic integrity handling?                                 | TA documents evidence, never adjudicates alone — always escalate (§12).                                                                                                                                                          |
+| Other frameworks (PyTorch, ROS, …)?                         | Not permitted; the grading environment does not have them.                                                                                                                                                                                               |
+| Which files may students modify?                             | Exactly four (§4.1); everything else is re-assembled from the pristine release at grading time.                                                                                                                                                         |
+| External resources?                                          | Reading references is fine; submitted code must be their own (course policy details: TBD — Instructor Confirmation Required).                                                                                                                           |
+| AI coding tools?                                             | Course policy:**TBD — Instructor Confirmation Required.** Until confirmed, direct students to the course's general policy.                                                                                                                        |
+| Student has no GPU / weak hardware?                          | Irrelevant — CPU-only assignment.                                                                                                                                                                                                                       |
+| Numerical tolerance disputes?                                | Thresholds are fixed in released code (0.005 / 0.05 / 0.02 m; FSM 3 cm / 1 cm / 6 cm; SHACL 0.90 / 0.02 / 0.005). Not negotiable per-student.                                                                                                            |
+| Runtime complaints?                                          | No formal limit; advise sane iteration budgets (reference: 1000 iterations, threshold 0.001).                                                                                                                                                            |
+| Submission platform / deadline / late & resubmission policy? | **TBD — Instructor Confirmation Required.**                                                                                                                                                                                                       |
+| Academic integrity handling?                                 | TA documents evidence, never adjudicates alone — always escalate (§12).                                                                                                                                                                                |
 
 ---
 
@@ -470,28 +469,28 @@ Information to request from the student (verbatim checklist):
 
 ### Required
 
-| Resource                                                       | Author / Org      | Link                                                                               | Why                                                         |
-| -------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| The Ultimate Guide to Jacobian Matrices for Robotics           | Automatic Addison | https://automaticaddison.com/the-ultimate-guide-to-jacobian-matrices-for-robotics/ | The exact geometric-Jacobian construction Tasks 1–2 need   |
+| Resource                                                       | Author / Org      | Link                                                                               | Why                                                           |
+| -------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| The Ultimate Guide to Jacobian Matrices for Robotics           | Automatic Addison | https://automaticaddison.com/the-ultimate-guide-to-jacobian-matrices-for-robotics/ | The exact geometric-Jacobian construction Tasks 1–2 need     |
 | SHACL — Shapes Constraint Language (W3C Recommendation, 2017) | W3C               | https://www.w3.org/TR/shacl/                                                       | Node shapes,`sh:maxInclusive`, validation reports — Task 4 |
-| In-repo ontology + worked examples                             | Course staff      | `semantic/ontology/hw3-ontology.ttl`, `ground_execution.py`, `shapes.ttl`          | The authoritative vocabulary and patterns to imitate        |
+| In-repo ontology + worked examples                             | Course staff      | `semantic/ontology/hw3-ontology.ttl`, `ground_execution.py`, `shapes.ttl`    | The authoritative vocabulary and patterns to imitate          |
 
 ### Recommended
 
-| Resource                                        | Author / Org               | Link                    | Why                                    |
-| ----------------------------------------------- | -------------------------- | ----------------------- | -------------------------------------- |
-| PyBullet Quickstart Guide                       | Bullet Physics             | https://pybullet.org    | Simulation API used by the harness     |
-| Apache Jena documentation                       | Apache Software Foundation | https://jena.apache.org | The`shacl` CLI used by `run_task4.sh`  |
-| QUDT — units vocabulary                        | QUDT.org                   | https://qudt.org        | The unit IRIs used in grounding        |
-| Introduction to Robotics: Mechanics and Control | J. J. Craig                | (textbook; link TBD)    | D-H conventions and Jacobians in depth |
+| Resource                                        | Author / Org               | Link                    | Why                                        |
+| ----------------------------------------------- | -------------------------- | ----------------------- | ------------------------------------------ |
+| PyBullet Quickstart Guide                       | Bullet Physics             | https://pybullet.org    | Simulation API used by the harness         |
+| Apache Jena documentation                       | Apache Software Foundation | https://jena.apache.org | The `shacl` CLI used by `run_task4.sh` |
+| QUDT — units vocabulary                        | QUDT.org                   | https://qudt.org        | The unit IRIs used in grounding            |
+| Introduction to Robotics: Mechanics and Control | J. J. Craig                | (textbook; link TBD)    | D-H conventions and Jacobians in depth     |
 
 ### Optional
 
-| Resource                                                                 | Author / Org | Link                                           | Why                                        |
-| ------------------------------------------------------------------------ | ------------ | ---------------------------------------------- | ------------------------------------------ |
-| IEEE 1872-2015 — Standard Ontologies for Robotics and Automation (CORA) | IEEE         | (standard; access via IEEE Xplore — link TBD) | The origin of`cora:` / `pos:` vocabularies |
-| SOMA ontology                                                            | EASE CRC     | (link TBD — verify before citing to students) | Origin of the`soma:` terms                 |
-| RDF 1.1 Turtle                                                           | W3C          | https://www.w3.org/TR/turtle/                  | The serialization students write           |
+| Resource                                                                 | Author / Org | Link                                           | Why                                             |
+| ------------------------------------------------------------------------ | ------------ | ---------------------------------------------- | ----------------------------------------------- |
+| IEEE 1872-2015 — Standard Ontologies for Robotics and Automation (CORA) | IEEE         | (standard; access via IEEE Xplore — link TBD) | The origin of `cora:` / `pos:` vocabularies |
+| SOMA ontology                                                            | EASE CRC     | (link TBD — verify before citing to students) | Origin of the `soma:` terms                   |
+| RDF 1.1 Turtle                                                           | W3C          | https://www.w3.org/TR/turtle/                  | The serialization students write                |
 
 ---
 
