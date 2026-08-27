@@ -1,3 +1,4 @@
+# TA SOLUTION — drop-in replacement for hw3_template/ik.py (DO NOT DISTRIBUTE)
 import argparse, time, os, json
 import numpy as np
 import math as m
@@ -72,19 +73,32 @@ def your_ik(robot_id, new_pose : list or tuple or np.ndarray,
     # --- Note : please modify the code in `your_ik` function.                     --- #
     # -------------------------------------------------------------------------------- #
     
-    #### your code ####
+    #### TA solution ####
+    # Damped Least Squares iterative IK driven by your_fk's pose + jacobian.
+    dh_params = get_ur5_DH_params()
+    target = np.asarray(new_pose, dtype=float)
+    target_rot = R.from_quat(target[3:]).as_matrix()
 
-    # TODO: update tmp_q
-    # tmp_q = ? # may be more than one line
+    damping = 0.05
+    step_rate = 0.5
+    for _ in range(max_iters):
+        pose_now, jacobian = your_fk(dh_params, tmp_q, base_pos)
 
-    # hint : 
-    # 1. You may use `your_fk` function and jacobian matrix to do this
-    # 2. Be careful when computing the delta x
-    # 3. You may use some hyper parameters (i.e., step rate) in optimization loops
+        # delta x: position error + orientation error (rotation vector of R_t R_c^T)
+        dp = target[:3] - pose_now[:3]
+        rot_now = R.from_quat(pose_now[3:]).as_matrix()
+        drot = R.from_matrix(target_rot @ rot_now.T).as_rotvec()
+        dx = np.concatenate([dp, drot])
 
-    ###################
-    
-    raise NotImplementedError
+
+        if np.linalg.norm(dx) < stop_thresh:
+            break
+
+        dq = jacobian.T @ np.linalg.solve(
+            jacobian @ jacobian.T + (damping ** 2) * np.eye(6), dx)
+        tmp_q = tmp_q + step_rate * dq
+        tmp_q = np.clip(tmp_q, joint_limits[:, 0], joint_limits[:, 1])
+    #####################
 
     return list(tmp_q) # 6 DoF
 

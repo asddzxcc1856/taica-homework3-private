@@ -1,4 +1,5 @@
-import os, argparse, json
+# TA SOLUTION — drop-in replacement for hw3_template/fk.py (DO NOT DISTRIBUTE)
+import os, argparse, json, time
 import numpy as np
 
 from scipy.spatial.transform import Rotation as R
@@ -20,14 +21,6 @@ def cross(a : np.ndarray, b : np.ndarray) -> np.ndarray :
     return np.cross(a, b)
 
 def get_ur5_DH_params():
-
-    # TODO: this is the DH parameters (following classic DH convention) of the robot in this assignment,
-    # It will be a little bit different from the official spec 
-    # You need to use these parameters to compute the forward kinematics and Jacobian matrix
-    # details : 
-    # see "pybullet_robot_envs/envs/ur5_envs/robot_data/ur5/ur5.urdf" in this project folder
-    # official spec : https://www.universal-robots.com/articles/ur/application-installation/dh-parameters-for-calculations-of-kinematics-and-dynamics/
-    
     dh_params = [
         {'a':  0,      'd': 0.0892,  'alpha':  np.pi/2,  },    # joint1
         {'a':  -0.425, 'd': 0,       'alpha':  0         },    # joint2
@@ -42,7 +35,7 @@ def get_ur5_DH_params():
 def your_fk(DH_params : dict, q : list or tuple or np.ndarray, base_pos) -> np.ndarray:
 
     # robot initial position
-    base_pose = list(base_pos) + [0, 0, 0]  
+    base_pose = list(base_pos) + [0, 0, 0]
 
     assert len(DH_params) == 6 and len(q) == 6, f'Both DH_params and q should contain 6 values,\n' \
                                                 f'but get len(DH_params) = {DH_params}, len(q) = {len(q)}'
@@ -50,24 +43,29 @@ def your_fk(DH_params : dict, q : list or tuple or np.ndarray, base_pos) -> np.n
     A = get_matrix_from_pose(base_pose) # a 4x4 matrix, type should be np.ndarray
     jacobian = np.zeros((6, 6)) # a 6x6 matrix, type should be np.ndarray
 
-    # -------------------------------------------------------------------------------- #
-    # --- TODO: Read the task description                                          --- #
-    # --- Task 1 : Compute Forward-Kinematic and Jacobain of the robot by yourself --- #
-    # ---          Try to implement `your_fk` function without using any pybullet  --- #
-    # ---          API. (20% for accuracy)                                         --- #
-    # -------------------------------------------------------------------------------- #
-    
-    #### your code ####
-    
+    #### TA solution ####
+    # classic DH: T_i = Rz(theta_i) Tz(d_i) Tx(a_i) Rx(alpha_i)
+    origins = [A[:3, 3].copy()]
+    z_axes = [A[:3, 2].copy()]
+    for i, dh in enumerate(DH_params):
+        ct, st = np.cos(q[i]), np.sin(q[i])
+        ca, sa = np.cos(dh['alpha']), np.sin(dh['alpha'])
+        T = np.array([
+            [ct, -st * ca,  st * sa, dh['a'] * ct],
+            [st,  ct * ca, -ct * sa, dh['a'] * st],
+            [0.,       sa,       ca,      dh['d']],
+            [0.,       0.,       0.,           1.],
+        ])
+        A = A @ T
+        origins.append(A[:3, 3].copy())
+        z_axes.append(A[:3, 2].copy())
 
-    # A = ? # may be more than one line
-    # jacobian = ? # may be more than one line
-
-    raise NotImplementedError
-    # hint : 
-    # https://automaticaddison.com/the-ultimate-guide-to-jacobian-matrices-for-robotics/
-    
-    ###############################################
+    # geometric jacobian of the end-effector point (revolute joints)
+    p_end = A[:3, 3]
+    for i in range(6):
+        jacobian[:3, i] = np.cross(z_axes[i], p_end - origins[i])
+        jacobian[3:, i] = z_axes[i]
+    #####################
 
     # adjustment don't touch
     adjustment = np.asarray([[ 0, -1,  0],
@@ -79,7 +77,7 @@ def your_fk(DH_params : dict, q : list or tuple or np.ndarray, base_pos) -> np.n
     return pose_7d, jacobian
 
 # TODO: [for your information]
-# This function is the scoring function, we will use the same code 
+# This function is the scoring function, we will use the same code
 # to score your algorithm using all the testcases
 def score_fk(robot, testcase_files : str, visualize : bool=False):
 
@@ -90,7 +88,7 @@ def score_fk(robot, testcase_files : str, visualize : bool=False):
     jacobian_score = [JACOBIAN_SCORE_MAX / testcase_file_num for _ in range(testcase_file_num)]
     jacobian_error_cnt = [0 for _ in range(testcase_file_num)]
 
-    p.addUserDebugText(text = "Scoring Your Forward Kinematic Algorithm ...", 
+    p.addUserDebugText(text = "Scoring Your Forward Kinematic Algorithm ...",
                         textPosition = [0.1, -0.6, 1.5],
                         textColorRGB = [1,1,1],
                         textSize = 1.0,
@@ -102,7 +100,7 @@ def score_fk(robot, testcase_files : str, visualize : bool=False):
         f_in = open(testcase_file, 'r')
         fk_dict = json.load(f_in)
         f_in.close()
-        
+
         test_case_name = os.path.split(testcase_file)[-1]
 
         joint_poses = fk_dict['joint_poses']
@@ -118,15 +116,26 @@ def score_fk(robot, testcase_files : str, visualize : bool=False):
             gt_pose = poses[i]
 
             if visualize :
+                # 視覺增強: 把手臂擺到這筆測資的關節角, 讓紅/綠座標軸出現在手掌上。
+                # reset + 馬達目標 + 少量 step 才會讓 GUI 同步畫面 (同 Task 2 的模式);
+                # 這只影響顯示 — your_fk 的計算與評分完全不經過 pybullet。
+                joint_ids = list(robot._joint_name_to_ids.values())
+                for jid, qi in zip(joint_ids, joint_poses[i]):
+                    p.resetJointState(robot.robot_id, jid, qi)
+                    p.setJointMotorControl2(robot.robot_id, jid, p.POSITION_CONTROL,
+                                            targetPosition=qi)
+                for _ in range(5):
+                    p.stepSimulation()
+                time.sleep(0.05)
                 color_yours = [[1,0,0], [1,0,0], [1,0,0]]
                 color_gt = [[0,1,0], [0,1,0], [0,1,0]]
                 draw_coordinate(your_pose, size=0.01, color=color_yours)
                 draw_coordinate(gt_pose, size=0.01, color=color_gt)
 
             fk_error = np.linalg.norm(your_pose - np.asarray(gt_pose), ord=2)
-            
-            
-     
+
+
+
             if fk_error > FK_ERROR_THRESH:
                 fk_score[file_id] -= penalty
                 fk_error_cnt[file_id] += 1
@@ -135,7 +144,7 @@ def score_fk(robot, testcase_files : str, visualize : bool=False):
             if jacobian_error > JACOBIAN_ERROR_THRESH:
                 jacobian_score[file_id] -= penalty
                 jacobian_error_cnt[file_id] += 1
-        
+
         fk_score[file_id] = 0.0 if fk_score[file_id] < 0.0 else fk_score[file_id]
         jacobian_score[file_id] = 0.0 if jacobian_score[file_id] < 0.0 else jacobian_score[file_id]
 
@@ -144,7 +153,7 @@ def score_fk(robot, testcase_files : str, visualize : bool=False):
                             fk_score[file_id], FK_SCORE_MAX / testcase_file_num, fk_error_cnt[file_id], cases_num) + \
                     "- Your Score Of Jacobian Matrix   : {:00.03f} / {:00.03f}, Error Count : {:4d} / {:4d}\n".format(
                             jacobian_score[file_id], JACOBIAN_SCORE_MAX / testcase_file_num, jacobian_error_cnt[file_id], cases_num)
-        
+
         print(score_msg)
     p.removeAllUserDebugItems()
 
@@ -153,7 +162,7 @@ def score_fk(robot, testcase_files : str, visualize : bool=False):
     for file_id in range(testcase_file_num):
         total_fk_score += fk_score[file_id]
         total_jacobian_score += jacobian_score[file_id]
-    
+
     print("====================================================================================")
     print("- Your Total Score : {:00.03f} / {:00.03f}".format(
         total_fk_score + total_jacobian_score, FK_SCORE_MAX + JACOBIAN_SCORE_MAX))

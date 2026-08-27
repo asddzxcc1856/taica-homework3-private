@@ -1,13 +1,20 @@
 # HW3 — Robot Manipulation × Semantic Robot Knowledge
 
-NYCU Physical AI / TAICA — UR5 Kinematics + Transporter Network + Semantic Knowledge Graph
+NYCU Physical AI / TAICA — UR5 Kinematics + FSM Manipulation + Semantic Knowledge Graph
+
+> 助教手冊（設計理念、評分 SOP、測資維護、常見學生問題）: [TA_TUTORIAL.md](TA_TUTORIAL.md) — 內部文件
+>
+> **TA Internal Guide** (comprehensive, in English — setup, architecture, grading rubric, reference results, known issues, operations): [TA_INTERNAL_GUIDE.md](TA_INTERNAL_GUIDE.md) — internal, do not distribute
+
+> 此為 demo 版（各 TODO 皆為完整參考解）;學生發放版在 `hw3_template/`。
 
 ## Learning Objectives
 
 - **Forward Kinematics (FK)**: Understand and implement forward kinematics for a 6-DoF robot arm using D-H parameters, including end-effector pose and Jacobian computation.
 - **Inverse Kinematics (IK)**: Understand and implement iterative inverse kinematics using Jacobian-based methods to compute joint configurations for a target end-effector pose.
-- **Application of IK in Robot Manipulation**: Understand how inverse kinematics is integrated into a complete manipulation pipeline by applying the implemented IK solver to the Transporter Network block insertion task (prepick → grasp → preplace → insertion). IK is a component of a larger robotic system, not an isolated mathematical function.
-- **Semantic Representation and Interoperability with a Triple Store**: Represent robot specifications and kinematic results using the shared robotics vocabulary `<http://taica.course/hw3/ontology#>`, store them in an RDF triple store, and query them through SPARQL. Experience how a common semantic representation enables independently developed robotics programs to share, query, compare, and reuse robot knowledge.
+- **Application of IK/FK in Robot Manipulation**: Understand how kinematics is integrated into a complete manipulation pipeline — a deterministic **Finite State Machine** drives the UR5 through pick-and-place episodes, solving every motion with YOUR IK and cross-checking YOUR FK against the simulator at every state transition. IK/FK are components of a larger robotic system, not isolated mathematical functions.
+- **Grounding with Standard Robotics Ontologies**: Represent robot specifications and kinematic results as STRUCTURED RDF that reuses existing standard vocabularies — IEEE 1872 CORA robots, SOMA joints/joint-states/poses/episodes, IEEE 1872 POS positions, QUDT units — instead of ad-hoc strings. Symbol grounding turns the numbers of Tasks 1–3 into machine-readable knowledge.
+- **SHACL Validation of Execution Semantics**: Write SHACL shapes that validate the grounded execution data — discovering problem states of the IK/FK process (arm out of range, no convergence) directly from the numbers, and your validation result on a TA-provided 24-record execution dataset must match the TA answer key exactly.
 
 ## Overview
 
@@ -15,42 +22,32 @@ NYCU Physical AI / TAICA — UR5 Kinematics + Transporter Network + Semantic Kno
 |---|---|---|---|---|
 | 1 | Forward Kinematics | `fk.py` → `your_fk()` | `python fk.py` | 20 |
 | 2 | Inverse Kinematics | `ik.py` → `your_ik()` | `python ik.py` | 40 |
-| 3 | Transporter Network | (integration, no code change) | `python ravens/test.py ...` | 10 |
-| 4 | Semantic Knowledge + Triple Store | 1 function in `semantic/ground_task1_fk.py` + 1 function in `semantic/ground_task2_ik.py` + `semantic/queries/q3_interop_compare.rq` | `bash semantic/run_task4.sh` | 30 |
+| 3 | FSM Manipulation Pipeline | (integration, no code change) | `python fsm_task.py` | 10 |
+| 4 | Semantic Grounding (REUSE) + SHACL Validation | 2 functions in `semantic/ground_execution.py` + `semantic/shapes.ttl` | `bash semantic/run_task4.sh` | 30 |
 
 ---
 
 ## Step 0. Environment Setup
 
-**Step 0-1.** Create the conda environment and install Python dependencies:
+**Step 0-1.** Create the conda environment and install Python dependencies
+(no deep-learning framework, no dataset, no checkpoint — everything runs
+locally with PyBullet):
 
 ```bash
 cd hw3
-cd ravens
 conda create --name taica-hw3 python=3.7 -y
 conda activate taica-hw3
-sudo apt-get update
-sudo apt-get -y install gcc libgl1-mesa-dev
-pip install -r requirements.txt
-pip install opencv-python==4.5.5.64 transforms3d
-cd ..
+pip install pybullet numpy scipy
 ```
 
-**Step 0-2.** (Optional, for GPU acceleration in Task 3) Install CUDA 10.1 / cuDNN 7.6.5:
-
-```bash
-conda install cudatoolkit==10.1.243 -y
-conda install cudnn==7.6.5 -y
-```
-
-**Step 0-3.** (Required for Task 4) Install JDK 11+ and verify:
+**Step 0-2.** (Required for Task 4) Install JDK 11+ and verify:
 
 ```bash
 sudo apt-get -y install openjdk-11-jdk
 java -version && javac -version
 ```
 
-The first run of Task 4 automatically downloads Apache Jena 4.10.0 (~30 MB, including the TDB2 triple store command-line tools). It is cached under `semantic/.cache/` and works offline afterwards.
+The first run of Task 4 automatically downloads Apache Jena 4.10.0 (~30 MB; its `shacl` CLI performs the validation). It is cached under `semantic/.cache/` and works offline afterwards.
 
 ---
 
@@ -93,100 +90,115 @@ python ik.py
 
 Expected output: Error Count 0 on all three test files, Mean Error in the 1e-3 range.
 
-## Task 3. Transporter Network Manipulation Pipeline (10 points)
+## Task 3. FSM Manipulation Pipeline (10 points)
 
-Where IK sits in the pipeline (see `movep()` → `solve_ik()` → **`your_ik()`** in [ravens/ravens/environments/environment.py](ravens/ravens/environments/environment.py)):
+Your IK/FK now drive a complete manipulation pipeline — no learned model, no
+downloads: a deterministic **Finite State Machine** ([fsm_task.py](fsm_task.py),
+TA-provided, no code change) runs 10 seeded pick-and-place episodes:
 
 ```
-Transporter Network → Predict Pick / Place Poses → IK → Joint Configuration
-→ Robot Motion → Prepick → Grasp → Preplace → Insertion
+MOVE_TO_PREPICK -> DESCEND_TO_PICK -> GRASP -> LIFT
+    -> MOVE_TO_PREPLACE -> DESCEND_TO_PLACE -> RELEASE -> RETREAT
+    -> VERIFY -> SUCCESS / FAILURE
 ```
 
-**Step 3-1.** Download the test data and model checkpoint:
-- dataset: https://drive.google.com/file/d/1Jh8hAvraT1Zt1YfSNRT_lMJXbsK4Wcse/view → put the whole `block-insertion-easy-test/` folder under `ravens/`
-- checkpoint: https://drive.google.com/file/d/1cmFbqTzuu6IUJPlx1eOq2djRSubfM94H/view → put the whole `checkpoints/` folder under `ravens/`
+Every motion state performs **two validations**:
+- **IK validation** — the target pose is solved by `your_ik`, executed with
+  position control, and the achieved end-effector position must land within
+  3 cm of the command (`IK_MISS` otherwise)
+- **FK validation** — `your_fk` is evaluated on the MEASURED joint angles and
+  must agree with the simulator's end-effector position within 1 cm
+  (`FK_MISMATCH` otherwise) — your kinematic model is checked against physics
+  at every state transition
 
-**Step 3-2.** Run (10 test episodes using your IK):
+`DESCEND_TO_PICK` steps downward until the suction gripper reports contact,
+`GRASP`/`RELEASE` toggle the suction constraint, and `VERIFY` requires the
+block to rest within 6 cm of the goal marker.
+
+**Run** (10 seeded episodes; add `-g` to watch in the GUI):
 
 ```bash
-cd ravens
-CUDA_VISIBLE_DEVICES=-1 python ravens/test.py --assets_root=./ravens/environments/assets/ --disp=True --task=block-insertion-easy --agent=transporter --n_demos=1000 --n_steps=20000
+python fsm_task.py
+python fsm_task.py -g     # PyBullet window: watch the FSM drive the arm
 ```
 
-Expected output: `Total Reward: 1.0 Done: True` for all 10 episodes.
+Expected output:
+
+```
+============================ Task 3 : FSM Manipulation Pipeline ============================
+FSM: MOVE_TO_PREPICK -> DESCEND_TO_PICK -> GRASP -> ... -> VERIFY
+Episode  1/10 | SUCCESS  (place error 0.000 m)
+...
+Episode 10/10 | SUCCESS  (place error 0.000 m)
+- Your Total Score : 10.000 / 10.000
+```
+
+A failure names the state and the reason (`IK_MISS in MOVE_TO_PREPICK ...`,
+`FK_MISMATCH in LIFT ...`, `NO_CONTACT`, `PLACE_MISS`) — the FSM localizes
+WHERE in the pipeline your kinematics broke.
 
 ---
 
-## Task 4. Semantic Robot Knowledge and Triple Store (30 points)
+## Task 4. Semantic Grounding (REUSE) + SHACL Validation (30 points)
 
-Turn the *numbers* from Tasks 1–3 into *semantics*: the shared vocabulary `<http://taica.course/hw3/ontology#>` defines concepts that **evaluate all three tasks** — FK correctness, IK solvability, and insertion success — as machine-readable facts. Each task has its own grounding script producing its own knowledge graph; OWL reasoning then derives one evaluation class per task, everything is loaded into a TDB2 triple store, and SPARQL reads the evaluation back out — side by side with a **UR10 knowledge graph independently produced by the TA**.
+Turn the *numbers* of your FK/IK **execution process** into *semantics*, then let the semantic layer find what went wrong. You implement two things — **grounding** and **SHACL**:
 
 ```
-ground_task1_fk.py        ──> task1_fk_graph.ttl        ─┐   Task 1 -> hw3:PassedFKComputation
-ground_task2_ik.py        ──> task2_ik_graph.ttl        ─┤   Task 2 -> hw3:SolvedIKComputation
-ground_task3_insertion.py ──> task3_insertion_graph.ttl ─┼─> OWL reasoning ─> TDB2 store ─> SPARQL
-TA's UR10 graph (provided)    ta-robot-graph.ttl        ─┘   Task 3 -> hw3:SuccessfulEpisode
+                         (1) grounding
+your_fk / your_ik  ──>  ground_execution.py  ──>  data.ttl
+  execution process       (2 TODO functions)
+                                                  (2) SHACL
+                          shapes.ttl (2 TODO shapes)  vs  data.ttl            -> validation.ttl
+                          shapes.ttl                  vs  ta-faulty-execution.ttl
+                                                          (TA dataset, 24 cases) -> probe-validation.ttl
 ```
 
-**Reusability across groups**: your instances live in your own namespace `http://taica.course/hw3/data/<group-id>#` (derived from `--group`), while every group shares the `hw3:` vocabulary and the same target URIs. Any number of submissions can therefore be merged into one triple store without URI collisions, and the same queries compare everyone's results — you can load another group's graphs next to yours and study their design.
+**Step 4-1. Understand the REUSEd vocabulary.** Open [semantic/ontology/hw3-ontology.ttl](semantic/ontology/hw3-ontology.ttl):
+- Design rule: **reuse existing standard vocabularies wherever possible** — robots are `cora:Robot` (IEEE 1872 CORA), joints are `soma:RevoluteJoint`, joint states are `soma:JointState`, poses are `soma:6DPose` composed of an IEEE 1872 `pos:Position` + quaternion component, units are QUDT IRIs (`unit:M` / `unit:RAD`); `hw3:` only mints what no standard covers (kinematic computations, D-H parameters, statuses, distances)
+- **Structured representation, no JSON strings**: numeric values are typed `xsd:double` literals on structured nodes. `semantic/common.py` provides the serializers (`pose_to_ttl` / `joint_config_to_ttl`) — use them
 
-**Step 4-1. Understand the shared vocabulary.** Open [semantic/ontology/hw3-ontology.ttl](semantic/ontology/hw3-ontology.ttl):
-- Design rule: **reuse existing vocabularies wherever possible** — robots are `cora:Robot` (IEEE 1872 CORA), joints are `soma:RevoluteJoint`, poses are `soma:6DPose`, episodes are `soma:Episode` (SOMA/EASE), aligned to DUL upper-level terms; `hw3:` only mints what no standard covers (kinematic computations, D-H parameters, evaluation statuses)
-- The three **shared targets** (`hw3:target_near` / `target_mid` / `target_far`) are the join keys for cross-graph comparison
-- Section 4 defines one **inference-defined evaluation class per task** (`PassedFKComputation`, `SolvedIKComputation`, `SuccessfulEpisode`): no program ever asserts them directly; the OWL reasoner derives membership from the grounded statuses
+**Step 4-2. GROUNDING — implement the ontology-API functions.** Open [semantic/ground_execution.py](semantic/ground_execution.py):
 
-Then open [semantic/ontology/ta-robot-graph.ttl](semantic/ontology/ta-robot-graph.ttl) (do not modify): results the TA published for the same targets, using a different arm (UR10) and a different IK program.
-
-**Step 4-2. Implement the grounding (2 functions across 2 files).**
-
-| File | Grounds | Your work |
+| Function | Grounds | Status |
 |---|---|---|
-| [semantic/ground_task1_fk.py](semantic/ground_task1_fk.py) | robot spec + FK evaluation vs ground truth (pose/Jacobian errors, PASS/FAIL) | TODO `robot_spec_to_triples()`; `fk_result_to_triples()` is the **worked example** — read it first |
-| [semantic/ground_task2_ik.py](semantic/ground_task2_ik.py) | IK evaluation on the 3 shared targets (status + residual) | TODO `ik_result_to_triples()` |
-| [semantic/ground_task3_insertion.py](semantic/ground_task3_insertion.py) | insertion episodes from the Task 3 results pkl (reward, SUCCESS/FAILURE) | none (TA-provided) — but it needs you to have **run Task 3** so `ravens/test.py` has written `block-insertion-easy-transporter-*.pkl` |
+| `fk_computation_to_triples()` | one FK execution: input config, EE pose, pose/Jacobian errors | **worked example** — read it first |
+| `robot_spec_to_triples()` | robot spec: D-H params + joint limits for all 6 joints | **TODO 1** |
+| `ik_computation_to_triples()` | one IK execution: status, residual, `hw3:hasTargetDistance`, structured joint configuration | **TODO 2** |
 
-Notes: float literals must be written as `"..."^^xsd:double`; `solvesForTarget` must point to the shared target URI in the `hw3:` namespace (if you write it in `stu:`, the cross-graph join in Q3 will not find your results).
+The script runs your `your_fk` (3 test cases vs ground truth) and `your_ik` (3 fixed targets: near / mid / far) and writes everything into **`output/data.ttl`** — your execution process as a semantic graph.
 
-**Step 4-3. Complete the interoperability query.** Open [semantic/queries/q3_interop_compare.rq](semantic/queries/q3_interop_compare.rq) and complete the SPARQL query following the hints: for every shared target, list **each robot's IK status** (3 targets × 2 robots = 6 rows; the same query automatically scales to N robots when more groups' graphs are loaded). q1, q2, and q4 are provided — read them before writing q3.
+**Step 4-3. SHACL — write the validation shapes.** Open [semantic/shapes.ttl](semantic/shapes.ttl): the FK-accuracy shape (`hasPoseError <= 0.005` else `FK_INACCURATE`) is the worked example; you add two shapes — `hasTargetDistance <= 0.90` else **`ARM_OUT_OF_RANGE`** (arm beyond the UR5 workspace) and `hasResidual <= 0.02` else **`NO_CONVERGENCE`**. Message prefixes are graded, keep them exact. Two validations run:
+- your shapes vs **your** `data.ttl` → `output/validation.ttl` — on correct IK it flags exactly `target_mid` / `target_far` (they really are out of range) and leaves `target_near` clean
+- your shapes vs **[semantic/ta-faulty-execution.ttl](semantic/ta-faulty-execution.ttl)** — a TA-provided dataset of **24 IK/FK execution records** (good/bad mixed, *including values exactly at the thresholds*). The grader compares your validation result against the TA answer key **[semantic/ta-answer-key.json](semantic/ta-answer-key.json)** case by case — each record's flags must match the answer **exactly** (no false positives, no false negatives) to count as correct
+
+Design note: SHACL validates the **numbers** (thresholds on distances / residuals / errors) directly from the grounded data — the numeric判斷 stays in the data layer, the constraints live declaratively in shapes.
 
 **Step 4-4. Run and score with one command.**
 
 ```bash
 conda activate taica-hw3
-bash semantic/run_task4.sh --group <your-group-id>   # uses your your_fk / your_ik
-# Before finishing Task 1/2 you can preview the pipeline with:
-# bash semantic/run_task4.sh --reference
+bash semantic/run_task4.sh --student-id <your-student-id>   # uses your your_fk / your_ik
 ```
 
-The script runs 7 steps: toolchain check → prepare Jena/TDB2 → the three grounding scripts → OWL reasoning (produces `semantic/output/inferred_graph.ttl`) → load the triple store (`semantic/store/`) → run q1–q4 (results saved to `semantic/output/q*.csv`) → scoring.
-
-Expected output at the end (q4 is the semantic evaluation report of all three tasks):
+The script runs 5 steps: toolchain → Jena → grounding (`data.ttl`) → SHACL (three validation reports) → scoring. Expected output:
 
 ```
----- q4_task_evaluation_report ----
-| hw3:PassedFKComputation | 3  |
-| hw3:SolvedIKComputation | 1  |
-| hw3:SuccessfulEpisode   | 10 |
-
-  [S1] q1 robot summary ................ OK  (+2)
-  [S1] DH parameters (6 / 6 joints) .... OK  (+6)
-  [S2] Task 1 FK evaluation (3/3 PASS) . OK  (+4.0)
-  [S2] Task 2 IK statuses (3/3) ........ OK  (+4.0)
-  [S2] q2 inferred SolvedIKComputation . OK  (+2)
-  [S2] Task 3 episodes (10 SUCCESS) .... OK  (+2)
-  [S3] q3 interop comparison matrix .... OK  (+10)
+  [S1] grounding structure (0 violations) OK  (+12)
+  [S2] target_mid flagged ARM_OUT_OF_RANGE .... OK  (+2)
+  [S2] target_far flagged ARM_OUT_OF_RANGE .... OK  (+2)
+  [S2] target_near clean (no problem flags) ... OK  (+2)
+  [S2] no JOINT_LIMIT_VIOLATION ............... OK  (+2)
+  [S3] TA dataset vs answer key: faulty 11/11, clean 13/13 OK  (+10)
   Your Task 4 Score : 30.0 / 30.0
 ```
 
-The correct Q3 result showcases the point of interoperability: `target_mid` is `OUT_OF_REACH` for your UR5 but `SOLVED` for the TA's UR10 — two pipelines that have never seen each other's code can answer "which target can only the UR10 reach?" through the shared vocabulary alone.
+Grading uses **[semantic/ta-shapes-full.ttl](semantic/ta-shapes-full.ttl)** — the TA's complete SHACL suite: `STRUCTURE:*` shapes check your grounding (types, required properties, `xsd:double` typing, exactly 6 `soma:JointState` per configuration), problem shapes re-discover ARM_OUT_OF_RANGE / NO_CONVERGENCE from your numbers, and a SHACL-SPARQL shape cross-checks every joint angle against its joint's limits (`JOINT_LIMIT_VIOLATION`).
 
 **Task 4 FAQ**
 - `python` is not the taica-hw3 environment → `PYTHON=~/miniconda3/envs/taica-hw3/bin/python bash semantic/run_task4.sh`
 - Jena download fails → manually extract apache-jena-4.10.0 and `export JENA_HOME=<path>` before running
-- q2 is empty → reasoning did not take effect; check that the `hasIKStatus` literal is exactly `"SOLVED"` (case-sensitive, no extra whitespace)
-- Task 3 episodes item FAILs → run Task 3 first; `ground_task3_insertion.py` reads the pkl that `ravens/test.py` writes under `ravens/`
-
----
+- S1 reports STRUCTURE violations → open `output/ta-validation.ttl`; each `sh:resultMessage` tells you which property/typing is missing (a bare `0.0892` instead of `"0.0892"^^xsd:double` is the classic one)
+- S3 mismatches → the grader prints `expected [...] , got [...]` per wrong case. Your `sh:message` must START with `ARM_OUT_OF_RANGE:` / `NO_CONVERGENCE:` (prefix-matched), and thresholds must use `sh:maxInclusive` — the dataset contains records exactly at 0.90 / 0.02 / 0.005, which are *conforming*
 
 ## Grading
 
@@ -194,23 +206,21 @@ The correct Q3 result showcases the point of interoperability: `target_mid` is `
 |---|---|
 | Task 1: FK correctness (FK 10 + Jacobian 10, TA test cases) | 20 |
 | Task 2: IK correctness (TA test cases, default arguments only) | 40 |
-| Task 3: Transporter reward over 10 test episodes | 10 |
-| Task 4: S1 spec grounding 10 + S2 result grounding 10 + S3 SPARQL interop 10 | 30 |
+| Task 3: FSM pick-and-place success over 10 seeded episodes | 10 |
+| Task 4: S1 grounding structure 12 + S2 problem detection 8 + S3 SHACL vs TA dataset & answer key 10 | 30 |
 | **Total** | **100** |
 
 ## Submission
 
 1. `fk.py` (with `your_fk` completed)
 2. `ik.py` (with `your_ik` completed)
-3. `semantic/ground_task1_fk.py` (with `robot_spec_to_triples()` completed)
-4. `semantic/ground_task2_ik.py` (with `ik_result_to_triples()` completed)
-5. `semantic/queries/q3_interop_compare.rq` (completed)
-6. A short report: screenshots of all four tasks, plus an explanation based on your Task 4 query results of "why `target_mid` is semantically the same target for both arms, yet geometrically reachable by only one of them"
+3. `semantic/ground_execution.py` (with both TODO functions completed)
+4. `semantic/shapes.ttl` (with the two problem shapes completed)
+5. A short report: screenshots of all four tasks, plus an explanation of what your SHACL validation discovered in `output/validation.ttl` and in the TA dataset (`output/probe-validation.ttl`)
 
 > Note: `semantic/output/`, `semantic/store/`, and `semantic/.cache/` are auto-generated — do not submit them.
 
 ## Reference
 
-- https://github.com/google-research/ravens
 - https://automaticaddison.com/the-ultimate-guide-to-jacobian-matrices-for-robotics/
 - Apache Jena / TDB2: https://jena.apache.org/documentation/tdb2/
