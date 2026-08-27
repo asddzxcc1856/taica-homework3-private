@@ -372,6 +372,254 @@ Correctness = the student's Task 2/3 code surviving integration. Internals a TA 
 - Failure semantics: `IK_MISS` = solver quality; `FK_MISMATCH` = FK model wrong even though physics executed fine; `NO_CONTACT` = usually a systematic height bias (often a tampered adjustment block); `GRASP_FAILED`/`PLACE_MISS` = physics-layer, may be flaky (§6.5).
 
 
+### 5.5 Input/output format reference — worked examples for every task and step
+
+All values below are taken from actual runs of the solved `hw3_demo/` tree (not fabricated). Use them verbatim when answering "what exactly should this look like" questions.
+
+#### Task 1 · Step 1-2 — grounding: script and function I/O
+
+**Script CLI** (`semantic/ground_execution.py`, normally invoked by `run_task1.sh`):
+
+```bash
+python semantic/ground_execution.py --group student-group-07          # reference mode (default)
+python semantic/ground_execution.py --group student-group-07 --own    # after Tasks 2-3
+```
+
+**Inputs available to the grounding code:**
+
+```python
+# get_ur5_DH_params() — list of 6 dicts (classic D-H, authoritative table)
+[{'a':  0,      'd': 0.0892,  'alpha':  np.pi/2},   # joint1
+ {'a': -0.425,  'd': 0,       'alpha':  0},          # joint2
+ {'a': -0.392,  'd': 0,       'alpha':  0},          # joint3
+ {'a':  0.,     'd': 0.1093,  'alpha':  np.pi/2},    # joint4
+ {'a':  0.,     'd': 0.09475, 'alpha': -np.pi/2},    # joint5
+ {'a':  0,      'd': 0.2023,  'alpha':  0}]          # joint6
+
+# common.JOINT_LIMITS — list of 6 [lower, upper] pairs (radians)
+[[-4.712389, -1.570796], [-2.3562, -1.0], [-17.0, 17.0],
+ [-17.0, 17.0], [-17.0, 17.0], [-17.0, 17.0]]
+
+# common.SHARED_TARGETS — the three fixed IK experiment targets (world frame)
+[{'uri': 'target_near', 'position': [0.35, 0.28, 0.95]},
+ {'uri': 'target_mid',  'position': [0.90, 0.13, 0.80]},
+ {'uri': 'target_far',  'position': [1.80, 0.50, 0.95]}]
+```
+
+**TODO 1 `robot_spec_to_triples(dh_params, joint_limits)` → list of Turtle-line strings.** Expected output (excerpt of the joined lines, exactly what the reference solution emits):
+
+```turtle
+stu:my_ur5 a cora:Robot ;
+    hw3:producedBy "student-group-07" ;
+    hw3:hasDoF 6 ;
+    hw3:hasJoint stu:my_ur5_joint1 , stu:my_ur5_joint2 , ... , stu:my_ur5_joint6 .
+
+stu:my_ur5_joint1 a soma:RevoluteJoint ;
+    hw3:jointIndex 1 ;
+    hw3:dh_a "0.0"^^xsd:double ;
+    hw3:dh_d "0.0892"^^xsd:double ;
+    hw3:dh_alpha "1.570796"^^xsd:double ;
+    hw3:hasJointLowerLimit "-4.712389"^^xsd:double ;
+    hw3:hasJointUpperLimit "-1.570796"^^xsd:double .
+```
+
+**Worked example `fk_computation_to_triples(case_index, joint_config, eef_pose_7d, pose_error, jacobian_error)`.** Input example → output excerpt:
+
+```python
+fk_computation_to_triples(0,
+    [-3.154407, -1.573303, 1.572776, -1.570284, -1.570925, -0.012678],  # q (rad, 6)
+    [0.2872, 0.2337, 0.912, -0.0, 0.0, -0.0, 1.0],                       # pose_7d
+    0.0, 0.0)                                                             # errors vs GT
+```
+
+```turtle
+stu:fk_case_0 a hw3:FKComputation ;
+    hw3:producedBy "student-group-07" ;
+    hw3:computedForRobot stu:my_ur5 ;
+    hw3:hasInputJointConfiguration stu:fk_case_0_q ;
+    hw3:hasEndEffectorPose stu:fk_case_0_ee ;
+    hw3:hasPoseError "0.0"^^xsd:double ;
+    hw3:hasJacobianError "0.0"^^xsd:double .
+
+stu:fk_case_0_q a hw3:JointConfiguration ;
+    hw3:hasJointState stu:fk_case_0_q_js1 , ... , stu:fk_case_0_q_js6 .
+stu:fk_case_0_q_js1 a soma:JointState ;
+    hw3:isStateOfJoint stu:my_ur5_joint1 ;
+    qudt:hasUnit unit:RAD ;
+    soma:hasJointPosition "-3.154407"^^xsd:double .
+```
+
+**TODO 2 `ik_computation_to_triples(target_uri, joint_config, ik_status, residual, target_distance)`.** Input example → expected output excerpt:
+
+```python
+ik_computation_to_triples('target_mid',
+    [-3.26552, -1.32178, 0.61481, -0.83911, -1.52586, 0.42342],   # q (rad, 6)
+    'OUT_OF_REACH', 0.65504, 1.10557)
+```
+
+```turtle
+stu:ik_target_mid a hw3:IKComputation ;
+    hw3:producedBy "student-group-07" ;
+    hw3:computedForRobot stu:my_ur5 ;
+    hw3:solvesForTarget hw3:target_mid ;
+    hw3:hasIKStatus "OUT_OF_REACH" ;
+    hw3:hasResidual "0.65504"^^xsd:double ;
+    hw3:hasTargetDistance "1.10557"^^xsd:double ;
+    hw3:hasJointConfiguration stu:ik_target_mid_q .
+```
+
+**Script console output and file output:**
+
+```
+[FK] case 0 -> pose_err=0.000000 jac_err=0.000000
+[IK] target_near -> status=SOLVED, residual=0.0010 m, distance=0.627 m
+[IK] target_mid -> status=OUT_OF_REACH, residual=0.6550 m, distance=1.106 m
+[IK] target_far -> status=OUT_OF_REACH, residual=1.4177 m, distance=2.051 m
+[GROUND] knowledge graph written to .../semantic/output/data.ttl
+```
+
+`output/data.ttl` ≈ 366 triples: prefix header (written by `common.write_graph`) + 3 target poses + robot spec + 3 FK computations + 3 IK computations.
+
+#### Task 1 · Step 1-3 — SHACL: shape input and report output
+
+**Shape input format** (what students write in `shapes.ttl`; the worked FK example):
+
+```turtle
+hw3:FKAccuracyShape a sh:NodeShape ;
+    sh:targetClass hw3:FKComputation ;
+    sh:property [
+        sh:path hw3:hasPoseError ;
+        sh:maxInclusive "0.005"^^xsd:double ;
+        sh:message "FK_INACCURATE: pose error above the 0.005 m course threshold" ;
+    ] .
+```
+
+**Validation report output format** (`output/validation.ttl`, produced by Jena — note `rdf:type`, not `a`):
+
+```turtle
+[ rdf:type     sh:ValidationReport ;
+  sh:conforms  false ;
+  sh:result    [ rdf:type                      sh:ValidationResult ;
+                 sh:focusNode                  stu:ik_target_far ;
+                 sh:resultMessage              "ARM_OUT_OF_RANGE: target distance exceeds the UR5 reach (0.90 m)" ;
+                 sh:resultPath                 hw3:hasTargetDistance ;
+                 sh:resultSeverity             sh:Violation ;
+                 sh:sourceConstraintComponent  sh:MaxInclusiveConstraintComponent ;
+                 sh:value                      "2.05059"^^xsd:double ] ; ... ]
+```
+
+The scorer and `diagnose.py` read exactly two things per result: `sh:focusNode` (which record) and the `sh:resultMessage` prefix before the first `:` (which flag).
+
+**S3 dataset record formats** (`ta-faulty-execution.ttl`, three families):
+
+```turtle
+probe:ik_case_09 a hw3:IKComputation ;                # IK record
+    hw3:hasTargetDistance "0.901"^^xsd:double ;
+    hw3:hasResidual "0.004"^^xsd:double .
+
+probe:fk_case_06 a hw3:FKComputation ;                # FK record
+    hw3:hasPoseError "0.0051"^^xsd:double ;
+    hw3:hasJacobianError "0.006"^^xsd:double .
+
+probe:jl_joint_a a soma:RevoluteJoint ;               # joint for the JL records
+    hw3:hasJointLowerLimit "-4.712389"^^xsd:double ;
+    hw3:hasJointUpperLimit "-1.570796"^^xsd:double .
+probe:jl_case_03 a soma:JointState ;                  # joint-state record
+    soma:hasJointPosition "-0.9"^^xsd:double ;
+    hw3:isStateOfJoint probe:jl_joint_a .
+```
+
+**Answer-key format** (`ta-answer-key.json` — record name → exact expected flag list, empty = must stay clean):
+
+```json
+{ "ik_case_05": [],
+  "ik_case_09": ["ARM_OUT_OF_RANGE"],
+  "ik_case_14": ["ARM_OUT_OF_RANGE", "NO_CONVERGENCE"],
+  "fk_case_06": ["FK_INACCURATE"],
+  "jl_case_02": [],
+  "jl_case_03": ["JOINT_LIMIT_VIOLATION"] }
+```
+
+#### Task 1 · Step 1-4 — scoring I/O
+
+Input: the three reports in `output/` + `ta-answer-key.json`. Output: the score block shown in §3.6; exit code 0 iff total ≥ 29.9. A mismatch prints `- <record>: expected ['FLAG'] , got ['(clean)']` lines.
+
+#### Task 2 — `your_fk` I/O
+
+```python
+pose_7d, jacobian = your_fk(
+    get_ur5_DH_params(),                                              # 6-dict D-H table (above)
+    [-3.154407, -1.573303, 1.572776, -1.570284, -1.570925, -0.012678],# q: 6 floats (rad)
+    [-0.2, 0.13, 0.6])                                                # base_pos (m)
+# pose_7d  -> np.ndarray(7,)  e.g. [0.2872, 0.2337, 0.912, -0.0, 0.0, -0.0, 1.0]
+#             layout: [x, y, z, qx, qy, qz, qw]  (world frame, metres / unit quaternion)
+# jacobian -> np.ndarray(6,6) e.g. row0 = [-0.1029, 0.2229, -0.2021, ...]
+#             rows 0-2 linear, rows 3-5 angular, base frame
+```
+
+Test-case file format (`test_case/fk_test_case_easy.json`, 300 cases; medium/hard 100):
+
+```json
+{ "joint_poses": [[-3.1544, -1.5733, 1.5728, -1.5703, -1.5709, -0.0127], ...],
+  "poses":       [[0.2872, 0.2337, 0.912, -0.0, 0.0, -0.0, 1.0], ...],
+  "jacobian":    [[[...6 floats...] x6], ...] }
+```
+
+Console output format: the §3.6 score block, then the semantic-diagnosis block; the diagnosis records passed to `diagnose()` are `('diag_easy_017', q, pose_7d, fk_error, jacobian_error)` — failing cases plus case 0 of each file.
+
+#### Task 3 — `your_ik` I/O
+
+```python
+joints = your_ik(
+    robot.robot_id,                                   # pybullet body id (int)
+    [0.2872, 0.2337, 0.912, -0.0, 0.0, -0.0, 1.0],    # new_pose: 7 floats [x,y,z,qx,qy,qz,qw]
+    base_pos=[-0.2, 0.13, 0.6])                       # + defaults max_iters=1000, stop_thresh=0.001
+# joints -> 6 floats (rad), each inside JOINT_LIMITS
+```
+
+Test-case file format (`test_case/ik_test_case_easy.json`, 300 cases — a continuous trajectory):
+
+```json
+{ "current_joint_poses": [[...6 floats...], ...],
+  "next_poses":          [[0.2872, 0.2337, 0.912, -0.0, 0.0, -0.0, 1.0], ...] }
+```
+
+The harness drives the arm to the returned joints for 0.1 s and measures the achieved EE pose (threshold 0.02 m). Diagnosis records: `('diag_easy_042', joints, 'MISS'|'SOLVED', ik_error, target_distance_from_shoulder)`.
+
+#### Task 4 — FSM I/O
+
+No student-facing function. Input: episode seeds 0–9 → `sample_episode(seed)` returns `block_xy, goal_xy ∈ x[0.32,0.47] × y[0.02,0.24]`. Console output per episode:
+
+```
+Episode  1/10 | SUCCESS  (place error 0.000 m)
+Episode  4/10 | FAILURE at MOVE_TO_PREPICK — IK_MISS in MOVE_TO_PREPICK (achieved vs commanded = 0.0412 m)
+```
+
+Diagnosis records collected in `move_to`: failing motions as `('diag_07_move_to_prepick', measured_q, 'MISS', ik_err, distance)` and `('diag_07_move_to_prepick_fk', measured_q, fk_pose_7d, fk_err, 0.0)`; the first motion is always kept as a clean sample.
+
+#### `diagnose()` — bridge I/O (all of Tasks 2–4)
+
+```python
+diagnose('Task 3 IK',
+    fk_records=[('diag_easy_001', q6, pose7, 0.0311, 0.12)],   # (id, q, pose_7d, pose_err, jac_err)
+    ik_records=[('diag_easy_042', q6, 'MISS', 0.15, 0.60)])    # (id, q, status, residual, distance)
+```
+
+Output — conforming and flagged variants (real runs):
+
+```
+------------- Semantic diagnosis (your Task 1 layer) -------------
+  [Task 3 IK] all 3 sampled records conform to your shapes (no problem flags)
+```
+
+```
+------------- Semantic diagnosis (your Task 1 layer) -------------
+  [Task 3 IK] diag_easy_042 -> JOINT_LIMIT_VIOLATION, NO_CONVERGENCE
+  (1/3 records flagged; full report: semantic/output/diagnosis-validation.ttl)
+```
+
+Files produced: `output/diagnosis-data.ttl` (grounded records) and `output/diagnosis-validation.ttl` (SHACL report). Record ids must keep a fixed digit width (`{:03d}` in fk/ik, `{:02d}` in fsm) — the flag mapping matches ids by substring.
+
 ---
 
 ## 6. TA Grading Guide
