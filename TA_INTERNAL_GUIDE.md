@@ -19,19 +19,19 @@ Document map:
 
 ### 1.1 Background and motivation
 
-Robot manipulation rests on two mathematical primitives — forward kinematics (FK) and inverse kinematics (IK) — but students who implement them only against unit tests never see how they behave inside a real control loop, and never see how execution *data* becomes machine-interpretable *knowledge*. This assignment closes both gaps:
+Robot manipulation rests on two mathematical primitives — forward kinematics (FK) and inverse kinematics (IK) — but students who implement them only against unit tests never see how they behave inside a real control loop, and never see how execution *data* becomes machine-interpretable *knowledge*. This assignment closes both gaps, and deliberately puts the knowledge layer FIRST:
 
-1. Students implement FK and IK for a simulated UR5 arm from scratch (no simulator kinematics APIs allowed).
-2. A TA-provided deterministic finite state machine (FSM) drives pick-and-place episodes using the student's own solvers, cross-checking FK against physics at every state transition.
-3. Students then *ground* their FK/IK execution records as structured RDF that reuses standard robotics ontologies, and write SHACL shapes that detect problem states (arm out of range, non-convergence) directly from the grounded numbers.
+1. Students *ground* an FK/IK execution process (produced by TA reference solvers — no student kinematics needed) as structured RDF that reuses standard robotics ontologies, and write SHACL shapes that detect problem states (arm out of range, non-convergence, joint-limit violation) directly from the grounded numbers. They therefore know the checked data classes, forms, and expected results before implementing any algorithm.
+2. Students implement FK and IK for a simulated UR5 arm from scratch (no simulator kinematics APIs allowed) — re-running the Task 1 pipeline with `--own` at any time for immediate semantic feedback on their own solvers.
+3. A TA-provided deterministic finite state machine (FSM) drives pick-and-place episodes using the student's own solvers, cross-checking FK against physics at every state transition.
 
 ### 1.2 Assignment objectives
 
+- Convert execution-process data into a semantic knowledge graph following the REUSE principle (reuse standard vocabularies rather than inventing ad-hoc ones).
+- Author SHACL constraints whose validation results on a TA-provided dataset must match a published answer key exactly — built BEFORE any algorithm, so implementation work gets immediate semantic feedback.
 - Implement classic Denavit–Hartenberg (D-H) forward kinematics and a 6×6 geometric Jacobian for a 6-DoF arm.
 - Implement an iterative Jacobian-based IK solver (damped least squares recommended).
 - Observe both solvers operating inside a complete manipulation pipeline.
-- Convert execution-process data into a semantic knowledge graph following the REUSE principle (reuse standard vocabularies rather than inventing ad-hoc ones).
-- Author SHACL constraints whose validation results on a TA-provided dataset must match a published answer key exactly.
 
 ### 1.3 Learning objectives
 
@@ -42,25 +42,28 @@ After completing the assignment, a student can:
 3. Explain and tune damped-least-squares IK (damping, step rate, iteration budget, stopping threshold, joint-limit clipping).
 4. Explain why an FSM pipeline localizes kinematic failures to a specific state and check type.
 5. Model robot specifications and executions as structured RDF using CORA, SOMA, IEEE 1872 POS, and QUDT, with typed `xsd:double` literals instead of strings.
-6. Write SHACL node shapes with correct target classes, paths, inclusive thresholds, and message conventions, and interpret SHACL validation reports.
+6. Write SHACL node shapes with correct target classes, paths, inclusive thresholds, and message conventions — including a SHACL-SPARQL constraint for comparisons SHACL Core cannot express — and interpret SHACL validation reports.
 
 ### 1.4 Problem statement
 
-Given a UR5 model in PyBullet and its classic D-H table, implement `your_fk` and `your_ik`; pass visible and hidden accuracy tests; achieve 10/10 seeded FSM pick-and-place episodes; ground the FK/IK execution process into `data.ttl` reusing standard ontologies; and write two SHACL shapes such that validating a TA-provided 24-record execution dataset reproduces the TA answer key exactly.
+First (Task 1) ground a reference FK/IK execution process into `data.ttl` reusing standard ontologies, and write three SHACL shapes (two value-range shapes and one SHACL-SPARQL joint-limit shape) such that validating a TA-provided 30-record execution dataset reproduces the TA answer key exactly — no FK/IK implementation is needed; the data comes from the TA reference solvers. Students therefore know the checked data classes, forms, and thresholds BEFORE implementing any algorithm. Then (Tasks 2–4) implement `your_fk` and `your_ik`, pass visible and hidden accuracy tests, achieve 10/10 seeded FSM pick-and-place episodes — re-running the Task 1 pipeline with `--own` at any point for immediate semantic feedback on their own execution.
 
 ### 1.5 Scope
 
-**In scope:** analytic FK, geometric Jacobian, iterative IK, reading/executing a provided FSM, RDF/Turtle authoring via provided serializers, SHACL node shapes with value-range constraints.
+**In scope:** analytic FK, geometric Jacobian, iterative IK, reading/executing a provided FSM, RDF/Turtle authoring via provided serializers, SHACL node shapes with value-range constraints, and one SHACL-SPARQL constraint (cross-node joint-limit comparison).
 **Out of scope:** motion planning, collision avoidance, learned policies, OWL reasoning, SPARQL querying, dynamics/force control.
 
 ### 1.6 High-level workflow and expected final outcome
 
 ```
-Task 1  python fk.py          -> 20/20 (FK 10 + Jacobian 10, zero error counts)
-Task 2  python ik.py          -> 40/40 (mean error ~1e-3 m)
-Task 3  python fsm_task.py    -> 10/10 (10/10 SUCCESS episodes, deterministic)
-Task 4  bash semantic/run_task4.sh --group <id>
-                              -> 30/30 (S1 12 + S2 8 + S3 10)
+Task 1  bash semantic/run_task1.sh --group <id>
+                              -> 30/30 (S1 12 + S2 8 + S3 10; TA reference solvers,
+                                 no FK/IK needed — the semantic layer is built FIRST)
+Task 2  python fk.py          -> 20/20 (FK 10 + Jacobian 10, zero error counts)
+Task 3  python ik.py          -> 40/40 (mean error ~1e-3 m)
+Task 4  python fsm_task.py    -> 10/10 (10/10 SUCCESS episodes, deterministic)
+(during/after Tasks 2-3: re-run Task 1 with --own — the semantic layer gives
+ immediate feedback on the student's own solvers)
 Total                            100/100
 ```
 
@@ -85,8 +88,8 @@ Total                            100/100
 | Storage                   | < 1 GB total (repo + conda env + ~30 MB Jena cache)                                                                                                              | Required            |
 | Python                    | 3.7, in a dedicated conda environment                                                                                                                            | Required            |
 | Python packages           | `pybullet`, `numpy`, `scipy` (no version pins; verified with the builds pip resolves for Python 3.7)                                                       | Required            |
-| Java                      | JDK 11+ (only for Task 4's Jena `shacl` CLI)                                                                                                                   | Required            |
-| Apache Jena               | 4.10.0, auto-downloaded and cached by `run_task4.sh`                                                                                                           | Required (auto)     |
+| Java                      | JDK 11+ (only for Task 1's Jena `shacl` CLI)                                                                                                                   | Required            |
+| Apache Jena               | 4.10.0, auto-downloaded and cached by `run_task1.sh`                                                                                                           | Required (auto)     |
 | Docker                    | Not used                                                                                                                                                         | Not applicable      |
 | Conda (Miniconda)         | Environment manager                                                                                                                                              | Recommended         |
 | VS Code or similar editor | —                                                                                                                                                               | Optional            |
@@ -148,12 +151,12 @@ There is **no dataset, model, or checkpoint download**. All assets ship in the t
 | Visible test cases | `test_case/{fk,ik}_test_case_{easy,medium,hard}.json`                                                   | Task 1/2 self-checks             |
 | Hidden test cases  | `test_case/{fk,ik}_test_case_{ta1,ta2}.json` — **kept off the release; TA adds at grading time** | Task 1/2 grading                 |
 | Ontology           | `semantic/ontology/hw3-ontology.ttl`                                                                    | REUSE vocabulary (offline stubs) |
-| TA dataset         | `semantic/ta-faulty-execution.ttl` (24 records)                                                         | Task 4 S3 input                  |
-| Answer key         | `semantic/ta-answer-key.json`                                                                           | Task 4 S3 expected flags         |
-| TA SHACL suite     | `semantic/ta-shapes-full.ttl`                                                                           | Task 4 S1/S2 grading shapes      |
+| TA dataset         | `semantic/ta-faulty-execution.ttl` (30 records)                                                         | Task 1 S3 input                  |
+| Answer key         | `semantic/ta-answer-key.json`                                                                           | Task 1 S3 expected flags         |
+| TA SHACL suite     | `semantic/ta-shapes-full.ttl`                                                                           | Task 1 S1/S2 grading shapes      |
 | Apache Jena        | `semantic/.cache/apache-jena-4.10.0/` (auto-downloaded)                                                 | `shacl` CLI                    |
 
-Environment variables (all optional): `PYTHON` (interpreter used by `run_task4.sh`), `JENA_HOME` (pre-extracted Jena, skips download), `GROUND_SCRIPT` (TA-only grounding override, §7), `DISPLAY` (GUI modes).
+Environment variables (all optional): `PYTHON` (interpreter used by `run_task1.sh`), `JENA_HOME` (pre-extracted Jena, skips download), `GROUND_SCRIPT` (TA-only grounding override, §7), `DISPLAY` (GUI modes).
 
 ### 3.5 Environment verification
 
@@ -173,16 +176,17 @@ From `hw3_demo/` (already solved) or a template copy with the reference solution
 
 ```bash
 conda activate taica-hw3        # or prefix commands with PYTHON=... as below
+bash semantic/run_task1.sh --student-id ta    # (template tree uses --group)
+# expected final lines:
+#   [S3] TA dataset vs answer key: faulty 14/14, clean 16/16 OK  (+10)
+#   Your Task 1 Score : 30.0 / 30.0
+bash semantic/run_task1.sh --student-id ta --own   # same 30/30 via the solved your_fk/your_ik
 python fk.py                    # expected: Your Total Score : 20.000 / 20.000
 python ik.py                    # expected: Your Total Score : 40.000 / 40.000
 python fsm_task.py              # expected: 10 × SUCCESS, Your Total Score : 10.000 / 10.000
-bash semantic/run_task4.sh --student-id ta    # (template tree uses --group)
-# expected final lines:
-#   [S3] TA dataset vs answer key: faulty 11/11, clean 13/13 OK  (+10)
-#   Your Task 4 Score : 30.0 / 30.0
 ```
 
-`run_task4.sh` exits 0 only when the Task 4 score is ≥ 29.9, so `echo $?` is a one-line health check. On the course lab machine the existing environment is named `pdm-hw3`; prefix commands with `PYTHON=~/miniconda3/envs/pdm-hw3/bin/python` instead of activating `taica-hw3`.
+`run_task1.sh` exits 0 only when the Task 1 score is ≥ 29.9, so `echo $?` is a one-line health check. On the course lab machine the existing environment is named `pdm-hw3`; prefix commands with `PYTHON=~/miniconda3/envs/pdm-hw3/bin/python` instead of activating `taica-hw3`.
 
 ---
 
@@ -192,9 +196,9 @@ bash semantic/run_task4.sh --student-id ta    # (template tree uses --group)
 
 ```
 hw3_template/
-├── fk.py                      # Task 1 — students implement your_fk()
-├── ik.py                      # Task 2 — students implement your_ik()
-├── fsm_task.py                # Task 3 — TA-provided FSM (protected)
+├── fk.py                      # Task 2 — students implement your_fk()
+├── ik.py                      # Task 3 — students implement your_ik()
+├── fsm_task.py                # Task 4 — TA-provided FSM (protected)
 ├── test_case/                 # visible test cases (protected)
 ├── hw3_utils/                 # drawing/motion helpers (protected)
 ├── pybullet_planning/         # vendored planning utilities (protected)
@@ -202,15 +206,15 @@ hw3_template/
 ├── docs/hw3-student-guide.html
 ├── STUDENT_GUIDE.md / README.md
 └── semantic/
-    ├── ground_execution.py    # Task 4 — students implement 2 functions
-    ├── shapes.ttl             # Task 4 — students implement 2 shapes
+    ├── ground_execution.py    # Task 1 — students implement 2 functions
+    ├── shapes.ttl             # Task 1 — students implement 3 shapes
     ├── common.py              # serializers + sim helpers (protected)
     ├── ontology/hw3-ontology.ttl        (protected)
     ├── ta-faulty-execution.ttl          (protected)
     ├── ta-answer-key.json               (protected)
     ├── ta-shapes-full.ttl               (protected)
     ├── score_semantic.py                (protected)
-    ├── run_task4.sh                     (protected)
+    ├── run_task1.sh                     (protected)
     └── output/                # generated: data.ttl + three validation reports
 ```
 
@@ -233,10 +237,10 @@ hw3_template/
 ```mermaid
 flowchart LR
     subgraph numeric [Numeric layer]
-        FK[fk.py your_fk] --> T1[Task 1 score]
-        IK[ik.py your_ik] --> T2[Task 2 score]
+        FK[fk.py your_fk] --> T2[Task 2 score]
+        IK[ik.py your_ik] --> T3[Task 3 score]
         FK --> FSM[fsm_task.py FSM]
-        IK --> FSM --> T3[Task 3 score]
+        IK --> FSM --> T4[Task 4 score]
     end
     subgraph semanticlayer [Semantic layer]
         FK --> G[ground_execution.py]
@@ -248,44 +252,46 @@ flowchart LR
         P[ta-faulty-execution.ttl] --> V3[shapes.ttl -> probe-validation.ttl]
         V2 --> S[score_semantic.py]
         V3 --> S
-        K[ta-answer-key.json] --> S --> T4[Task 4 score]
+        K[ta-answer-key.json] --> S --> T1[Task 1 score]
     end
 ```
 
-`run_task4.sh` steps: (1) toolchain check → (2) Jena download/cache → (3) grounding → (4) three `shacl validate` runs → (5) scoring.
+`run_task1.sh` steps: (1) toolchain check → (2) Jena download/cache → (3) grounding (TA reference solvers by default; `--own` uses the student solvers) → (4) three `shacl validate` runs → (5) scoring.
 
 ---
 
 ## 5. Student Implementation Guide (what a correct solution looks like)
 
-### Task 1 — `your_fk` (20 pts)
+### Task 1 — grounding + SHACL (30 pts)
+
+- **TODO 1 `robot_spec_to_triples`:** must emit, for the robot individual: `a cora:Robot`, `hw3:hasDoF 6`, and six joint individuals each `a soma:RevoluteJoint` with `hw3:jointIndex`, D-H properties (`hw3:dh_a/dh_d/dh_alpha`) and limits (`hw3:lowerLimit/upperLimit`) — every number as `"…"^^xsd:double`. The `STRUCTURE:*` shapes in `ta-shapes-full.ttl` are the machine-checkable definition of "correct".
+- **TODO 2 `ik_computation_to_triples`:** must emit an `hw3:IKComputation` with `hw3:solvesForTarget <target_uri>`, `hw3:hasIKStatus`, `hw3:hasResidual`, `hw3:hasTargetDistance` (typed doubles), and a structured joint configuration via `common.joint_config_to_ttl` (exactly six `soma:JointState` nodes). The worked FK example is the template to imitate.
+- **shapes.ttl TODOs (three):** ① and ② are `sh:NodeShape`s targeting `hw3:IKComputation`, paths `hw3:hasTargetDistance` / `hw3:hasResidual`, `sh:maxInclusive "0.90"` / `"0.02"` (`xsd:double`), messages starting `ARM_OUT_OF_RANGE:` / `NO_CONVERGENCE:`. `maxInclusive` is non-negotiable — the S3 dataset contains records exactly at each threshold, which are conforming. ③ is a **SHACL-SPARQL** shape targeting `soma:JointState`: `sh:sparql` with a `SELECT $this` query joining `soma:hasJointPosition` → `hw3:isStateOfJoint` → the joint's `hw3:hasJointLowerLimit`/`hw3:hasJointUpperLimit`, `FILTER (?v < ?lo || ?v > ?hi)` (strict — limits are inclusive, and the dataset contains a record exactly at a limit), message starting `JOINT_LIMIT_VIOLATION:`. The `sh:prefixes` declaration (`hw3:SparqlPrefixes`) is TA-provided in the file; the same pattern exists as `hw3:TA_JointLimitShape` in `ta-shapes-full.ttl`.
+- **Reference-mode execution (the Task 1 default)** produces a `data.ttl` showing: near target SOLVED (residual ≈ 0.0005 m, distance 0.627 m), mid and far OUT_OF_REACH (distances 1.106 / 2.051 m) — mid/far get flagged, near stays clean (that is S2).
+- **Reference mode vs `--own`:** `ground_execution.py` defaults to the TA reference solvers (ground-truth FK poses with zero errors; `pybullet_ik` clipped to the course joint limits), so the task requires no FK/IK code. `--own` switches to `your_fk`/`your_ik` — students re-run it after Tasks 2-3 for immediate semantic feedback on their own solvers, and both modes score 30/30 on the reference solutions.
+
+### Task 2 — `your_fk` (20 pts)
 
 - **Correct implementation:** accumulate `Rz(θᵢ)·Tz(dᵢ)·Tx(aᵢ)·Rx(αᵢ)` over the six joints starting from `base_pos`; extract position + quaternion; build the geometric Jacobian column-by-column from preceding-frame `z` axes and origins; leave the provided `adjustment` block untouched (it maps the final D-H frame onto the simulator's EE frame — removing it shifts every pose by a constant transform and fails everything downstream).
 - **Grading mechanics:** per test case, pose error is the L2 norm of the 7-vector difference vs ground truth with threshold `FK_ERROR_THRESH = 0.005`; Jacobian error is the matrix L2 norm with threshold `JACOBIAN_ERROR_THRESH = 0.05`. Each error deducts `(10 / num_files) / (0.3 × cases_num)` from that component — i.e., failing 30 % of a file's cases zeroes that file's component score.
 - **Common mistakes:** modified-D-H convention instead of classic; quaternion sign/order (`[qx,qy,qz,qw]` expected); Jacobian built in the end-effector frame instead of the base frame; calling `p.getLinkState` (forbidden and useless — grading compares against analytic ground truth); editing the adjustment block.
 
-### Task 2 — `your_ik` (40 pts)
+### Task 3 — `your_ik` (40 pts)
 
 - **Correct implementation:** iterate {FK on current `q` → 6-D error (position difference + quaternion-difference-as-axis-angle) → DLS update `Δq = Jᵀ(JJᵀ+λ²I)⁻¹Δx · step_rate` → clip to joint limits} until the stop threshold or iteration budget. The reference uses damping 0.05 and step rate 0.5. Warm-starting from the current simulator joint state is what makes the continuous test trajectories converge.
 - **Grading mechanics:** the arm executes the returned joints under position control for 0.1 s; achieved EE pose vs target, L2 threshold `IK_ERROR_THRESH = 0.02`. Same per-case penalty structure as Task 1 (each file worth 13.333). **Default arguments only** — a solver that needs hand-tuned call-site arguments loses points by design.
 - **Difficulty design:** the three files differ in consecutive-target step size (≈ 6.1 / 15 / 25.5 mm) against the 0.02 m threshold; larger steps stress the warm start and step rate.
 - **Common mistakes:** best parameters passed at the call site instead of set as defaults; orientation error ignored (passes easy, fails hard); no joint-limit clipping (drifts into limits, then FSM `IK_MISS`); using `p.calculateInverseKinematics` (forbidden).
 
-### Task 3 — FSM (10 pts, no student code)
+### Task 4 — FSM (10 pts, no student code)
 
-Correctness = the student's Task 1/2 code surviving integration. Internals a TA should know:
+Correctness = the student's Task 2/3 code surviving integration. Internals a TA should know:
 
 - Episode sampling: `x∈[0.32,0.47], y∈[0.02,0.24]`, block–goal separation > 0.12 m, seeded per episode → fully deterministic. (Do **not** widen `x` beyond ~0.48: joint-limit clipping then produces a systematic 3–7 cm IK error even for the reference solver.)
 - Tolerances: IK ≤ 0.03 m, FK ≤ 0.01 m per motion state; final placement ≤ 0.06 m.
 - Suction contact occurs at commanded z ≈ 0.670; descent runs 0.78 → 0.655 in 0.01 m steps.
 - Failure semantics: `IK_MISS` = solver quality; `FK_MISMATCH` = FK model wrong even though physics executed fine; `NO_CONTACT` = usually a systematic height bias (often a tampered adjustment block); `GRASP_FAILED`/`PLACE_MISS` = physics-layer, may be flaky (§6.5).
 
-### Task 4 — grounding + SHACL (30 pts)
-
-- **TODO 1 `robot_spec_to_triples`:** must emit, for the robot individual: `a cora:Robot`, `hw3:hasDoF 6`, and six joint individuals each `a soma:RevoluteJoint` with `hw3:jointIndex`, D-H properties (`hw3:dh_a/dh_d/dh_alpha`) and limits (`hw3:lowerLimit/upperLimit`) — every number as `"…"^^xsd:double`. The `STRUCTURE:*` shapes in `ta-shapes-full.ttl` are the machine-checkable definition of "correct".
-- **TODO 2 `ik_computation_to_triples`:** must emit an `hw3:IKComputation` with `hw3:solvesForTarget <target_uri>`, `hw3:hasIKStatus`, `hw3:hasResidual`, `hw3:hasTargetDistance` (typed doubles), and a structured joint configuration via `common.joint_config_to_ttl` (exactly six `soma:JointState` nodes). The worked FK example is the template to imitate.
-- **shapes.ttl TODOs:** two `sh:NodeShape`s targeting `hw3:IKComputation`, paths `hw3:hasTargetDistance` / `hw3:hasResidual`, `sh:maxInclusive "0.90"` / `"0.02"` (`xsd:double`), messages starting `ARM_OUT_OF_RANGE:` / `NO_CONVERGENCE:`. `maxInclusive` is non-negotiable — the S3 dataset contains records exactly at each threshold, which are conforming.
-- **On correct kinematics**, the student's own `data.ttl` shows: near target SOLVED (residual ≈ 0.0005 m, distance 0.627 m), mid and far OUT_OF_REACH (distances 1.106 / 2.051 m) — mid/far get flagged, near stays clean (that is S2).
 
 ---
 
@@ -299,13 +305,13 @@ The assignment grades **behavior, not code style**: every point is tied to a pro
 
 | Category        | Description                                        |        Points | Full credit                  | Partial credit                                   | Zero credit                                                  |
 | --------------- | -------------------------------------------------- | ------------: | ---------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
-| Task 1 FK       | Pose accuracy on hidden cases                      |            10 | 0 errors on all files        | Automatic: per-error deduction, floor 0 per file | Component zero when ≥ 30 % of a file's cases err (per file) |
-| Task 1 Jacobian | Jacobian accuracy                                  |            10 | Same                         | Same                                             | Same                                                         |
-| Task 2 IK       | Executed-pose accuracy, default args, hidden cases |            40 | 0 errors on all files        | Automatic per-error deduction                    | Same mechanism                                               |
-| Task 3 FSM      | Successful seeded episodes                         |            10 | 10/10 SUCCESS                | `10 × successes / 10`                         | 0 successes                                                  |
-| Task 4 S1       | Grounding structure (STRUCTURE shapes)             |            12 | 0 violations                 | −2 per violation, floor 0                       | ≥ 6 violations or no `data.ttl`                           |
-| Task 4 S2       | Problem detection on own data                      |             8 | All four checks pass         | +2 per passing check                             | No check passes                                              |
-| Task 4 S3       | Own shapes vs TA dataset & answer key              |            10 | faulty 11/11 and clean 13/13 | `8×(faulty hit rate) + 2×(clean hit rate)`   | No matching record                                           |
+| Task 2 FK       | Pose accuracy on hidden cases                      |            10 | 0 errors on all files        | Automatic: per-error deduction, floor 0 per file | Component zero when ≥ 30 % of a file's cases err (per file) |
+| Task 2 Jacobian | Jacobian accuracy                                  |            10 | Same                         | Same                                             | Same                                                         |
+| Task 3 IK       | Executed-pose accuracy, default args, hidden cases |            40 | 0 errors on all files        | Automatic per-error deduction                    | Same mechanism                                               |
+| Task 4 FSM      | Successful seeded episodes                         |            10 | 10/10 SUCCESS                | `10 × successes / 10`                         | 0 successes                                                  |
+| Task 1 S1       | Grounding structure (STRUCTURE shapes)             |            12 | 0 violations                 | −2 per violation, floor 0                       | ≥ 6 violations or no `data.ttl`                           |
+| Task 1 S2       | Problem detection on own data                      |             8 | All four checks pass         | +2 per passing check                             | No check passes                                              |
+| Task 1 S3       | Own shapes vs TA dataset & answer key              |            10 | faulty 14/14 and clean 16/16 | `8×(faulty hit rate) + 2×(clean hit rate)`   | No matching record                                           |
 | **Total** |                                                    | **100** |                              |                                                  |                                                              |
 
 ### 6.3 Automated grading
@@ -315,10 +321,10 @@ The assignment grades **behavior, not code style**: every point is tied to a pro
 - **Commands and pass criteria:**
 
 ```bash
+bash semantic/run_task1.sh --group <id>    # /30 — exit 0 iff ≥ 29.9 (reference-mode grounding)
 python fk.py          # /20  — thresholds: pose 0.005 (L2), Jacobian 0.05 (L2)
 python ik.py          # /40  — threshold: 0.02 m on executed EE pose; DEFAULT ARGS ONLY
 python fsm_task.py    # /10  — 10 seeded episodes, deterministic
-bash semantic/run_task4.sh --group <id>    # /30 — exit 0 iff ≥ 29.9
 ```
 
 - **Runtime / memory limits:** none formally imposed; each command completes in minutes on a lab machine. If a submission runs pathologically long (e.g., an IK iteration budget of millions), treat as TBD — Instructor Confirmation Required before enforcing a cutoff.
@@ -336,7 +342,7 @@ Only the report is manually graded (weight within the 100 points: **TBD — Inst
 | Correct implementation, wrong file layout                                                                | Restore the four student files into a clean template copy and re-run; no penalty for stray extra files. Missing required file → that task scores 0.                                                                                                                                      |
 | Minor numerical error                                                                                    | Already priced in by thresholds and per-case penalties; do not re-judge manually.                                                                                                                                                                                                         |
 | Hard-coded outputs (e.g.,`your_fk` returns memorized ground truth; flags written into reports by hand) | Hidden test cases defeat FK/IK memorization. For Task 4, flags must originate from SHACL reports —`score_semantic.py` only reads reports, and hand-edited `output/` files are regenerated at grading time. Confirmed hard-coding = academic-integrity case → escalate (§12).       |
-| Missing edge cases (e.g., shapes with `maxExclusive`)                                                  | Automatic: boundary records in the S3 dataset deduct exactly (reference gradients: correct 10.0,`maxExclusive` 9.7, empty TODOs 4.2).                                                                                                                                                   |
+| Missing edge cases (e.g., shapes with `maxExclusive`)                                                  | Automatic: boundary records in the S3 dataset deduct exactly (reference gradients: correct 10.0, `maxExclusive` 9.8, non-strict joint-limit FILTER 9.9, empty TODOs 3.7).                                                                                                                                                   |
 | Partial implementation                                                                                   | Run everything anyway; scorers award earned fractions (e.g., FK done but IK stub → Task 1 + S1/S3-partial still score).                                                                                                                                                                  |
 | Code does not execute                                                                                    | Reproduce once, check §8/§9 for environment causes; if the crash is in student code, that task = 0. Quote the traceback in feedback.                                                                                                                                                    |
 | Dependency/environment problem                                                                           | Grade on the standard grading environment only. If it runs there, full marks stand; if the student's code depends on a nonstandard package, it fails (allowed imports: numpy / scipy / stdlib; pybullet only where permitted).                                                            |
@@ -378,20 +384,20 @@ python fsm_task.py
 
 cp ../hw3_demo/solutions/shapes_solution.ttl semantic/shapes.ttl   # template only
 GROUND_SCRIPT=$(pwd)/../hw3_demo/solutions/ground_solutions.py \
-  bash semantic/run_task4.sh --group ta-full-solution
+  bash semantic/run_task1.sh --group ta-full-solution
 #   [FK] cases -> pose_err ≈ 0.000625
 #   [IK] target_near SOLVED residual 0.0005 m dist 0.627 m
 #        target_mid  OUT_OF_REACH dist 1.106 m ; target_far OUT_OF_REACH dist 2.051 m
 #   data.ttl ≈ 366 triples
 #   validation.ttl: 4 violations (mid/far × ARM+NO_CONV; near clean)
 #   ta-validation.ttl: 0 STRUCTURE, same 4 problem flags, 0 JOINT_LIMIT
-#   probe-validation.ttl: 14 violations (11 faulty records, 3 double-flagged)
-#   [S3] faulty 11/11, clean 13/13 OK (+10) -> 30.0/30.0, exit code 0
+#   probe-validation.ttl: 17 violations (11 faulty IK/FK records, 3 of them double-flagged, + 3 joint-limit violations)
+#   [S3] faulty 14/14, clean 16/16 OK (+10) -> 30.0/30.0, exit code 0
 ```
 
 ### 7.3 S3 dataset and expected gradients (edge cases by design)
 
-24 records = 11 faulty + 13 clean; boundary values 0.90 / 0.02 / 0.005 are conforming; just-over values 0.901 / 0.0201 / 0.0051 are faulty; three records are double-flagged (both `ARM_OUT_OF_RANGE` and `NO_CONVERGENCE`). Verified score gradients: correct shapes **10.0**; `maxExclusive` instead of `maxInclusive` **9.7**; empty TODOs **4.2** (the worked FK example alone catches three records). When editing the dataset, `ta-faulty-execution.ttl` and `ta-answer-key.json` are a pair — change both, then re-verify all three gradients (procedure in §13 of this guide).
+30 records = 14 faulty + 16 clean, in three families: 16 IK computations (distance/residual), 8 FK computations (pose error), and 6 joint-state records (`jl_case_01..06`, referencing two probe joints that carry real per-joint limits). Boundary design: values exactly at 0.90 / 0.02 / 0.005 are conforming (`sh:maxInclusive`); just-over values 0.901 / 0.0201 / 0.0051 are faulty; three IK records are double-flagged (`ARM_OUT_OF_RANGE` + `NO_CONVERGENCE`); and `jl_case_02` sits exactly at its joint's upper limit — legal, so a non-strict joint-limit `FILTER` (`<=`/`>=`) is caught. Verified score gradients: correct shapes **10.0**; `maxExclusive` instead of `maxInclusive` **9.8**; non-strict joint-limit FILTER **9.9**; empty TODOs **3.7** (the worked FK example alone catches three records). When editing the dataset, `ta-faulty-execution.ttl` and `ta-answer-key.json` are a pair — change both, then re-verify all four gradients (procedure in §13 of this guide).
 
 ### 7.4 Reference performance
 
@@ -404,7 +410,7 @@ Each task completes within minutes on a standard lab desktop (CPU only). No form
 | #  | Symptom / message                                                               | Cause                                                                                     | Diagnosis & fix                                                                                                         | Affects grading?                             |
 | -- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | 1  | Task 1/2 GUI: arm never moves                                                   | Old PyBullet GUI does not re-render on `resetJointState` alone                          | Release code already does reset + motor retarget +`stepSimulation`; if broken, the student edited the visualize block | No (visual only)                             |
-| 2  | `NotImplementedError` in STEP 3 of `run_task4.sh` before Tasks 1/2 are done | Expected — grounding calls `your_fk`/`your_ik`                                       | Not a bug; STEP 1–2 passing means the environment is fine                                                              | No                                           |
+| 2  | `NotImplementedError` in STEP 3 of `run_task1.sh` on a pristine template | Expected — the two Task 1 grounding TODOs are unimplemented (the default mode needs NO `your_fk`/`your_ik`)                                       | Not a bug; STEP 1–2 passing means the environment is fine                                                              | No                                           |
 | 3  | Jena download fails (firewall/offline)                                          | STEP 2 network fetch                                                                      | Extract Jena 4.10.0 manually,`export JENA_HOME=`                                                                      | No — provide the workaround                 |
 | 4  | `IK_MISS` fixed at 3–7 cm in FSM regardless of retries                       | Target outside the reliable workspace; DLS converges to a joint-limit-clipped fixed point | Only occurs if someone widened the sampling range (`x > 0.48`) — never do this; release range is safe                | Yes if release files tampered; otherwise N/A |
 | 5  | `NO_CONTACT in DESCEND_TO_PICK`                                               | Systematic EE height bias, usually a modified FK `adjustment` block                     | Diff the student's `fk.py` tail against the release                                                                   | Yes (student bug)                            |
@@ -439,10 +445,10 @@ Information to request from the student (verbatim checklist):
 - Operating system and version
 - `python --version` and `conda env list`
 - `pip list | grep -Ei 'pybullet|numpy|scipy'`
-- `java -version` (Task 4 issues)
+- `java -version` (Task 1 issues)
 - The exact command executed and the directory it was run from
 - The **full** error message / traceback (not a screenshot fragment)
-- Relevant generated files for Task 4 issues (`semantic/output/*.ttl`)
+- Relevant generated files for Task 1 issues (`semantic/output/*.ttl`)
 - Steps to reproduce, and whether the visible test cases pass
 - GPU/CUDA info is **not** needed — this assignment uses neither
 
@@ -480,7 +486,7 @@ Information to request from the student (verbatim checklist):
 | Resource                                        | Author / Org               | Link                    | Why                                        |
 | ----------------------------------------------- | -------------------------- | ----------------------- | ------------------------------------------ |
 | PyBullet Quickstart Guide                       | Bullet Physics             | https://pybullet.org    | Simulation API used by the harness         |
-| Apache Jena documentation                       | Apache Software Foundation | https://jena.apache.org | The `shacl` CLI used by `run_task4.sh` |
+| Apache Jena documentation                       | Apache Software Foundation | https://jena.apache.org | The `shacl` CLI used by `run_task1.sh` |
 | QUDT — units vocabulary                        | QUDT.org                   | https://qudt.org        | The unit IRIs used in grounding            |
 | Introduction to Robotics: Mechanics and Control | J. J. Craig                | (textbook; link TBD)    | D-H conventions and Jacobians in depth     |
 
@@ -510,7 +516,7 @@ Information to request from the student (verbatim checklist):
 - **Release procedure:** release the `hw3_template/` tree only, after the §14 checklist passes. Strip generated dirs (`semantic/output/`, `semantic/.cache/`, `__pycache__/`) and confirm hidden test files are absent.
 - **Version control & numbering:** the course repository is the source of truth; tag releases `hw3-vMAJOR.MINOR` (MINOR for fixes that do not change scores, MAJOR for anything affecting grading). Exact tagging conventions: TBD if the course uses a different scheme.
 - **Bug-fix / update procedure:** fix in the repo → re-run the full §3.6 verification **and** the §7.3 S3 gradients → tag → announce with a diff summary and whether re-download is required.
-- **Dataset/answer-key edits:** always change `ta-faulty-execution.ttl` and `ta-answer-key.json` together; keep zero-padded record names (`*_case_01`); keep at least one just-over-threshold and one boundary record per problem class; re-verify gradients 10.0 / 9.7 / 4.2.
+- **Dataset/answer-key edits:** always change `ta-faulty-execution.ttl` and `ta-answer-key.json` together; keep zero-padded record names (`*_case_01`); keep at least one just-over-threshold and one boundary record per problem class; re-verify gradients 10.0 / 9.8 / 9.9 / 3.7.
 - **Communication:** every change that can alter a score gets an announcement (channel: TBD) naming affected files and tasks.
 - **Critical bugs:** see §12 emergency handling.
 - **Deadline extensions:** instructor decision only; TAs forward requests with context.
@@ -525,7 +531,7 @@ Information to request from the student (verbatim checklist):
 - [ ] Reference implementation tested: 20/20, 40/40, 10/10, 30/30 (§3.6, §7)
 - [ ] Public tests verified on the pristine template (stubs raise `NotImplementedError`; nothing else crashes)
 - [ ] Hidden tests verified against the reference solutions (20/20, 40/40 with ta1/ta2 enabled)
-- [ ] Grading script verified: `run_task4.sh` exit codes; S3 gradients 10.0 / 9.7 / 4.2 (§7.3)
+- [ ] Grading script verified: `run_task1.sh` exit codes (reference mode AND --own); S3 gradients 10.0 / 9.8 / 9.9 / 3.7 (§7.3)
 - [ ] Expected outputs in all documents match a fresh run
 - [ ] Student instructions reviewed (`STUDENT_GUIDE.md`, `README.md`, HTML guide) — no TA-only leakage
 - [ ] Known bugs section (§8) current

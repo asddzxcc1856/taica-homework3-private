@@ -5,15 +5,15 @@ functions of semantic/ground_execution.py and runs it.
 For the shapes.ttl STUDENT TODO, copy the solution file over first:
     cp solutions/shapes_solution.ttl     hw3_template/semantic/shapes.ttl
 
-Usage (invoked by run_task4.sh via the GROUND_SCRIPT override):
+Usage (invoked by run_task1.sh via the GROUND_SCRIPT override):
     cd hw3_template/semantic
-    GROUND_SCRIPT=/path/to/this/file PYTHON=... bash run_task4.sh
+    GROUND_SCRIPT=/path/to/this/file PYTHON=... bash run_task1.sh
 """
 
 import os
 import sys
 
-SEMANTIC_DIR = os.getcwd()  # run_task4.sh cd's into semantic/
+SEMANTIC_DIR = os.getcwd()  # run_task1.sh cd's into semantic/
 sys.path.insert(0, SEMANTIC_DIR)
 
 import common  # noqa: E402
