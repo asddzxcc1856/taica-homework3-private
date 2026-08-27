@@ -12,6 +12,7 @@ Document map:
 | ------------------------------------ | ------------------------------- | ---------------------------- |
 | `STUDENT_GUIDE.md`                 | Students                        | `hw3_template/` (released) |
 | `TA_INTERNAL_GUIDE.md` (this file) | TAs / instructors               | `hw3_demo/` (internal)     |
+| `docs/ta-formal-semantics.pdf` (+ `.tex`) | TAs / instructors | `hw3_demo/docs/` (internal) — mathematical statement of §4.4–§4.5 |
 
 ---
 
@@ -339,7 +340,7 @@ stu:fk_case_0_ee a soma:6DPose ;
 
 ### 4.5 SHACL semantics reference — validation mechanism and equivalent logical formulas
 
-Companion to §4.4: the ontology declares the vocabulary; this section defines, precisely, what the SHACL layer *means*. Useful for answering "why did/didn't this record get flagged" with a formula instead of a guess.
+Companion to §4.4: the ontology declares the vocabulary; this section defines, precisely, what the SHACL layer *means*. A fully formal LaTeX/PDF version of §4.4–§4.5 (signature tables, well-formedness definitions, constraint-component semantics, shape formulas, scoring formulas) lives at `docs/ta-formal-semantics.tex` / `.pdf` — rebuild with `pdflatex ta-formal-semantics.tex` (twice). Useful for answering "why did/didn't this record get flagged" with a formula instead of a guess.
 
 #### 4.5.1 The validation mechanism, step by step
 
