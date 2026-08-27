@@ -2,7 +2,7 @@
 
 NYCU Physical AI / TAICA — UR5 Kinematics + FSM Manipulation + Semantic Knowledge Graph
 
-> 助教手冊（設計理念、評分 SOP、測資維護、常見學生問題）: [TA_TUTORIAL.md](TA_TUTORIAL.md) — 內部文件
+> Reference solutions for grading student copies live in [solutions/](solutions/) — internal, do not distribute.
 >
 > **TA Internal Guide** (comprehensive, in English — setup, architecture, grading rubric, reference results, known issues, operations): [TA_INTERNAL_GUIDE.md](TA_INTERNAL_GUIDE.md) — internal, do not distribute
 

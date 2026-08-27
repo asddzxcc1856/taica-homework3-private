@@ -125,7 +125,7 @@ No submodules and no special branches are required. The relevant trees:
 | --------------------------- | -------------------------------------------------------------------------- |
 | `hw3_template/`           | Released student version (STUDENT TODO stubs; provenance flag `--group`) |
 | `hw3_demo/`               | Fully solved TA verification copy (provenance flag `--student-id`)       |
-| `hw3_semantic/solutions/` | Drop-in reference solutions (see §7) — never distribute                  |
+| `hw3_demo/solutions/` | Drop-in reference solutions (see §7) — never distribute                  |
 
 ### 3.3 Dependency installation
 
@@ -200,7 +200,7 @@ hw3_template/
 ├── pybullet_planning/         # vendored planning utilities (protected)
 ├── pybullet_robot_envs/       # vendored UR5 env + suction gripper (protected)
 ├── docs/hw3-student-guide.html
-├── SPEC.md / STUDENT_GUIDE.md / README.md
+├── STUDENT_GUIDE.md / README.md
 └── semantic/
     ├── ground_execution.py    # Task 4 — students implement 2 functions
     ├── shapes.ttl             # Task 4 — students implement 2 shapes
@@ -351,7 +351,7 @@ Only the report is manually graded (weight within the 100 points: **TBD — Inst
 
 ### 7.1 Reference implementations
 
-| File (in `hw3_semantic/solutions/`) | Replaces                              | Notes                                                       |
+| File (in `hw3_demo/solutions/`) | Replaces                              | Notes                                                       |
 | ------------------------------------- | ------------------------------------- | ----------------------------------------------------------- |
 | `fk_solution.py`                    | `fk.py`                             | Classic D-H chain + geometric Jacobian                      |
 | `ik_solution.py`                    | `ik.py`                             | DLS, damping 0.05, step rate 0.5, 6-D error                 |
@@ -376,8 +376,8 @@ python fsm_task.py
 #   Episode 1..10/10 | SUCCESS (place error ≈ 0.000 m) -> 10.000/10.000
 #   Deterministic: repeated runs are digit-identical.
 
-cp ../hw3_semantic/solutions/shapes_solution.ttl semantic/shapes.ttl   # template only
-GROUND_SCRIPT=$(pwd)/../hw3_semantic/solutions/ground_solutions.py \
+cp ../hw3_demo/solutions/shapes_solution.ttl semantic/shapes.ttl   # template only
+GROUND_SCRIPT=$(pwd)/../hw3_demo/solutions/ground_solutions.py \
   bash semantic/run_task4.sh --group ta-full-solution
 #   [FK] cases -> pose_err ≈ 0.000625
 #   [IK] target_near SOLVED residual 0.0005 m dist 0.627 m
@@ -391,7 +391,7 @@ GROUND_SCRIPT=$(pwd)/../hw3_semantic/solutions/ground_solutions.py \
 
 ### 7.3 S3 dataset and expected gradients (edge cases by design)
 
-24 records = 11 faulty + 13 clean; boundary values 0.90 / 0.02 / 0.005 are conforming; just-over values 0.901 / 0.0201 / 0.0051 are faulty; three records are double-flagged (both `ARM_OUT_OF_RANGE` and `NO_CONVERGENCE`). Verified score gradients: correct shapes **10.0**; `maxExclusive` instead of `maxInclusive` **9.7**; empty TODOs **4.2** (the worked FK example alone catches three records). When editing the dataset, `ta-faulty-execution.ttl` and `ta-answer-key.json` are a pair — change both, then re-verify all three gradients (procedure in `TA_TUTORIAL.md` §7).
+24 records = 11 faulty + 13 clean; boundary values 0.90 / 0.02 / 0.005 are conforming; just-over values 0.901 / 0.0201 / 0.0051 are faulty; three records are double-flagged (both `ARM_OUT_OF_RANGE` and `NO_CONVERGENCE`). Verified score gradients: correct shapes **10.0**; `maxExclusive` instead of `maxInclusive` **9.7**; empty TODOs **4.2** (the worked FK example alone catches three records). When editing the dataset, `ta-faulty-execution.ttl` and `ta-answer-key.json` are a pair — change both, then re-verify all three gradients (procedure in §13 of this guide).
 
 ### 7.4 Reference performance
 
@@ -527,7 +527,7 @@ Information to request from the student (verbatim checklist):
 - [ ] Hidden tests verified against the reference solutions (20/20, 40/40 with ta1/ta2 enabled)
 - [ ] Grading script verified: `run_task4.sh` exit codes; S3 gradients 10.0 / 9.7 / 4.2 (§7.3)
 - [ ] Expected outputs in all documents match a fresh run
-- [ ] Student instructions reviewed (`STUDENT_GUIDE.md`, `SPEC.md`, `README.md`, HTML guide) — no TA-only leakage
+- [ ] Student instructions reviewed (`STUDENT_GUIDE.md`, `README.md`, HTML guide) — no TA-only leakage
 - [ ] Known bugs section (§8) current
 - [ ] All documentation links click through
 - [ ] Submission procedure tested end-to-end (platform: TBD — Instructor Confirmation Required)
