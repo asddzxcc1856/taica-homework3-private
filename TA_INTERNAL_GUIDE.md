@@ -337,6 +337,101 @@ stu:fk_case_0_ee a soma:6DPose ;
 
 **Ontology vs SHACL division of labour**: the ontology declares vocabulary and alignment only — it contains **no numeric thresholds and no cardinality enforcement**. All checking is closed-world SHACL: `ta-shapes-full.ttl` enforces structure (types, required properties, `xsd:double` typing, exactly-6 joint states) and the student's `shapes.ttl` enforces the three problem thresholds. When editing the ontology, keep this split — never move a threshold into an OWL axiom (OWL cannot compare numbers).
 
+### 4.5 SHACL semantics reference — validation mechanism and equivalent logical formulas
+
+Companion to §4.4: the ontology declares the vocabulary; this section defines, precisely, what the SHACL layer *means*. Useful for answering "why did/didn't this record get flagged" with a formula instead of a guess.
+
+#### 4.5.1 The validation mechanism, step by step
+
+1. **Inputs.** A *shapes graph* (`shapes.ttl` or `ta-shapes-full.ttl`) and a *data graph* (`data.ttl`, `ta-faulty-execution.ttl`, or `diagnosis-data.ttl`). Jena's `shacl validate` runs on the plain data graph — **no RDFS/OWL inference is applied**, so `sh:targetClass C` selects exactly the nodes with an explicit `rdf:type C` triple (an instance typed only as a subclass is NOT selected; this is why the serializers always write the exact expected class).
+2. **Focus nodes.** For each shape, every target node becomes a *focus node*.
+3. **Value nodes.** For each `sh:property [ sh:path p ; … ]`, the value nodes are all objects of `p` on the focus node.
+4. **Constraint evaluation.** Each constraint component (`sh:maxInclusive`, `sh:minCount`, `sh:datatype`, `sh:class`, `sh:sparql`, …) checks the value nodes; **each individual failure produces one `sh:ValidationResult`** carrying `sh:focusNode`, `sh:resultMessage` (from `sh:message`), `sh:resultPath`, and `sh:value`.
+5. **Report.** `sh:conforms true` iff zero results. The course tooling (`score_semantic.py`, `diagnose.py`) reads only `sh:focusNode` + the `sh:resultMessage` prefix before the first `:`.
+6. **Closed world.** SHACL evaluates with negation-as-failure over the given graph: what is not asserted is treated as absent. This is the opposite of OWL's open-world assumption and the reason numeric thresholds live here and not in OWL axioms (OWL additionally cannot compare two numbers at all).
+
+Two consequences worth internalising:
+
+- **Vacuous conformance.** A value-range constraint quantifies universally over *existing* values: a record with NO `hw3:hasResidual` trivially conforms to the NO_CONVERGENCE shape. Presence is enforced separately by the STRUCTURE `sh:minCount` shapes — the two layers are deliberately independent.
+- **Shape independence.** Every shape is evaluated on its own; one node can collect several flags (the S3 double-flag records exercise exactly this).
+
+#### 4.5.2 Equivalent first-order formulas — problem shapes (student `shapes.ttl`)
+
+Notation: unary predicates are `rdf:type` assertions, binary predicates are properties; all quantifiers range over the data graph only (closed world).
+
+**FK accuracy (worked example)** — SHACL: `targetClass hw3:FKComputation ; path hw3:hasPoseError ; maxInclusive 0.005`.
+
+```
+∀x ∀v [ FKComputation(x) ∧ hasPoseError(x, v) → v ≤ 0.005 ]
+violation(x, v)  ⇔  FKComputation(x) ∧ hasPoseError(x, v) ∧ ¬(v ≤ 0.005)
+```
+
+Note the violation condition is `¬(v ≤ c)`, not `v > c`: a value that cannot be compared to the threshold (e.g. a string literal) also violates.
+
+**ARM_OUT_OF_RANGE (student TODO 1)** — `targetClass hw3:IKComputation ; path hw3:hasTargetDistance ; maxInclusive 0.90`.
+
+```
+∀x ∀v [ IKComputation(x) ∧ hasTargetDistance(x, v) → v ≤ 0.90 ]
+```
+
+**NO_CONVERGENCE (student TODO 2)** — `path hw3:hasResidual ; maxInclusive 0.02`.
+
+```
+∀x ∀v [ IKComputation(x) ∧ hasResidual(x, v) → v ≤ 0.02 ]
+```
+
+`maxInclusive` vs `maxExclusive` in formula form: inclusive conformance is `v ≤ c` (a record exactly at the threshold conforms); exclusive would be `v < c` and falsely flags the boundary records `ik_case_05` / `fk_case_04` — this is precisely what the S3 boundary cases detect.
+
+**JOINT_LIMIT_VIOLATION (student TODO 3, SHACL-SPARQL)** — SHACL Core constraints relate a focus node to *its own* values; they cannot join values across two different nodes. The joint-limit check needs the angle from the JointState and the limits from the joint it points at, hence `sh:sparql`:
+
+```
+∀s ∀v ∀j ∀lo ∀hi [ JointState(s) ∧ hasJointPosition(s, v) ∧ isStateOfJoint(s, j)
+                   ∧ hasJointLowerLimit(j, lo) ∧ hasJointUpperLimit(j, hi)
+                   → lo ≤ v ≤ hi ]
+```
+
+Mechanism: the `SELECT $this WHERE { … FILTER (?v < ?lo || ?v > ?hi) }` query is executed once per focus node with `$this` pre-bound; **every solution row becomes one violation**. The FILTER is the *negation* of the conformance condition, which is why limits being inclusive (`lo ≤ v ≤ hi` conforms) requires the strict `<` / `>` in the FILTER — `<=`/`>=` would implement `lo < v < hi` and falsely flag `jl_case_02` (exactly at its upper limit). Closed-world subtlety: a JointState whose joint has **no declared limits** produces no query solution and therefore vacuously conforms — on `data.ttl` the STRUCTURE joint shape guarantees the limits exist, and in the S3 dataset the probe joints carry limits explicitly.
+
+#### 4.5.3 Equivalent formulas — TA grading shapes (`ta-shapes-full.ttl`)
+
+**Cardinality (`sh:minCount m` / `sh:maxCount n` on path p)**:
+
+```
+∀x [ Target(x) → m ≤ |{ y : p(x, y) }| ≤ n ]
+e.g. robot spec:            |{ j : hasJoint(r, j) }| = 6            (min 6, max 6)
+e.g. joint configuration:   |{ s : hasJointState(c, s) }| = 6
+e.g. FK computation:        |{ q : hasInputJointConfiguration(x, q) }| = 1
+```
+
+**Datatype (`sh:datatype xsd:double` on path p)**:
+
+```
+∀x ∀v [ Target(x) ∧ p(x, v) → literal(v) ∧ datatype(v) = xsd:double ]
+```
+
+This is an *exact datatype identity*, not numeric comparability — a bare `0.0892` in Turtle is `xsd:decimal`, numerically fine but datatype-unequal, hence the classic STRUCTURE deduction. (The value-range shapes in 4.5.2 still compare decimals and doubles numerically; only the datatype constraint is strict.)
+
+**Class membership (`sh:class C` on path p)**:
+
+```
+∀x ∀y [ Target(x) ∧ p(x, y) → C(y) ]        with C(y) ⇔ explicit rdf:type (no inference)
+```
+
+e.g. every `hw3:hasJoint` value must be typed `soma:RevoluteJoint`; every `hw3:hasEndEffectorPose` value must be typed `soma:6DPose`.
+
+**TA problem shapes** replicate the three student formulas of 4.5.2 verbatim (S2 re-discovers ARM_OUT_OF_RANGE / NO_CONVERGENCE from the student's own numbers), and `hw3:TA_JointLimitShape` is the same SPARQL formula — the student TODO 3 has a reference implementation inside the grading suite itself.
+
+#### 4.5.4 Course-level mechanism conventions (on top of standard SHACL)
+
+| Convention | Definition | Enforced by |
+| --- | --- | --- |
+| Flag protocol | `flag = sh:resultMessage.split(':')[0]` — the message prefix IS the machine-readable flag; free text after the colon is human-facing | `score_semantic.py`, `diagnose.py` |
+| Record attribution | a result belongs to the record whose id is a substring of `sh:focusNode`; ids keep fixed digit width to make substring matching unambiguous | same |
+| Exact-match grading (S3) | per record r: `flags(r) = expected(r)` as *sets* — no false positives, no false negatives | `ta-answer-key.json` + scorer |
+| Threshold inclusivity | all numeric thresholds are inclusive (`≤`), joint limits are inclusive (`lo ≤ v ≤ hi`); boundary records in the S3 dataset are conforming by definition | dataset + answer key |
+| Layer split | ontology = vocabulary + alignment only; SHACL = all cardinality, typing, and numeric checking; OWL reasoning is not used anywhere | §4.4 division of labour |
+| Conformance gate | `run_task1.sh` exit 0 ⇔ Task 1 score ≥ 29.9; `sh:conforms` itself is informational (a correct solution's own data legitimately has 4 violations — mid/far are genuinely out of range) | `score_semantic.py` |
+
 ---
 
 ## 5. Student Implementation Guide (what a correct solution looks like)
