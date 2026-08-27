@@ -209,6 +209,7 @@ hw3_template/
     ├── ground_execution.py    # Task 1 — students implement 2 functions
     ├── shapes.ttl             # Task 1 — students implement 3 shapes
     ├── common.py              # serializers + sim helpers (protected)
+    ├── diagnose.py            # Tasks 2-4 -> Task 1 bridge (protected)
     ├── ontology/hw3-ontology.ttl        (protected)
     ├── ta-faulty-execution.ttl          (protected)
     ├── ta-answer-key.json               (protected)
@@ -227,6 +228,7 @@ hw3_template/
 | `robot_spec_to_triples(dh_params, joint_limits)`                                            | `ground_execution.py` | Task 1 TODO 1 — robot spec → Turtle lines                                                                                |
 | `ik_computation_to_triples(target_uri, joint_config, ik_status, residual, target_distance)` | `ground_execution.py` | Task 1 TODO 2 — one IK execution → Turtle lines                                                                          |
 | `pose_to_ttl` / `joint_config_to_ttl`                                                     | `semantic/common.py`  | Task 1 structured-node serializers students should call                                                                    |
+| `diagnose(task_label, fk_records, ik_records)` | `semantic/diagnose.py` | Tasks 2–4 → Task 1 bridge: grounds execution records with the STUDENT's Task 1 functions, validates with the student's `shapes.ttl`, prints per-record flags. Fail-soft (skips if Task 1 unfinished or Jena missing); runs AFTER scoring, never affects scores |
 | `get_ur5_DH_params()`                                                                       | `fk.py`               | Returns the classic D-H table (authoritative)                                                                              |
 | `your_fk(DH_params, q, base_pos)`                                                           | `fk.py`               | Task 2 — returns `(pose_7d, jacobian)`; the trailing `adjustment` block aligns to the simulator EE frame and must not be edited |
 | `your_ik(robot_id, new_pose, base_pos, max_iters=1000, stop_thresh=0.001)`                  | `ik.py`               | Task 3 — returns 6 joint angles; grading passes **default arguments only**                                               |
@@ -257,6 +259,8 @@ flowchart LR
 ```
 
 `run_task1.sh` steps: (1) toolchain check → (2) Jena download/cache → (3) grounding (TA reference solvers by default; `--own` uses the student solvers) → (4) three `shacl validate` runs → (5) scoring.
+
+**Tasks 2–4 → Task 1 feedback loop:** `fk.py`, `ik.py`, and `fsm_task.py` each collect execution records (failing cases plus one clean sample) and, after printing the score, call `semantic/diagnose.py` — which REUSES the student's `robot_spec_to_triples` / `fk_computation_to_triples` / `ik_computation_to_triples` to write `output/diagnosis-data.ttl`, validates it with the student's `shapes.ttl`, and prints per-record problem flags (`output/diagnosis-validation.ttl` holds the full report). This is why Task 1 comes first: the same vocabulary and thresholds check every later run. Fail-soft by design: unfinished Task 1 TODOs or a missing Jena produce a one-line skip notice and never change a score.
 
 ### 4.4 Ontology definition reference (`semantic/ontology/hw3-ontology.ttl`)
 
@@ -492,6 +496,7 @@ Each task completes within minutes on a standard lab desktop (CPU only). No form
 | 6  | Occasional `GRASP_FAILED` / `PLACE_MISS` with correct kinematics            | Suction-contact physics flakiness                                                         | Re-run once; count only reproducible failures                                                                           | Re-run policy §6.5                          |
 | 7  | `[S3] … missing FAIL` or scorer finds 0 results despite violations           | SHACL report parsing: Jena writes `rdf:type sh:ValidationResult`                        | Already handled by the scorer regex; only recurs if someone swaps Jena versions with a different report style           | Would — keep Jena pinned at 4.10.0          |
 | 8  | STRUCTURE violations about datatypes                                            | Untyped literal (`0.0892`) instead of `"0.0892"^^xsd:double`                          | Message in `ta-validation.ttl` names the property                                                                     | Automatic S1 deduction (correct behavior)    |
+| 8b | `Semantic diagnosis … skipped` under a Task 2–4 score | Task 1 grounding TODOs unimplemented, or Jena not cached yet | Expected fail-soft behaviour of `diagnose.py`; run `run_task1.sh` once / finish Task 1 | No — informational only |
 | 9  | `bash: … No such file or directory` during grading sessions                  | Shell cwd persists between commands                                                       | Always `cd` to the tree root or use absolute paths                                                                    | No                                           |
 | 10 | GUI:`cannot connect to X server`                                              | No display (SSH session)                                                                  | Use headless modes (default) or `DISPLAY=:1` on the lab box                                                           | No                                           |
 | 11 | `pip install pybullet` build failure on non-Linux / wrong Python              | Unsupported platform or Python ≠ 3.7                                                     | Recreate the conda env with Python 3.7 on Linux                                                                         | Environment-side                             |

@@ -28,3 +28,8 @@ PYTHON=~/miniconda3/envs/pdm-hw3/bin/python bash semantic/run_task1.sh --student
 → 評分。設計原則:**SHACL 直接驗證數值**(門檻:0.90 m reach /
 0.02 m residual / 0.005 m pose error),宣告式 constraints 取代
 手寫驗證程式。
+
+**Tasks 2–4 迴路**:`fk.py`/`ik.py`/`fsm_task.py` 跑完分數後會自動呼叫
+`semantic/diagnose.py`——用**學生自己的** grounding 函式與 `shapes.ttl`
+對執行紀錄做 SHACL 診斷,逐筆印出問題旗標(fail-soft:Task 1 未完成或
+無 Jena 時只印一行略過訊息,不影響分數)。
