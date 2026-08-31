@@ -2,12 +2,6 @@
 
 NYCU Physical AI / TAICA — Semantic Knowledge Graph + UR5 Kinematics + FSM Manipulation
 
-> Reference solutions for grading student copies live in [solutions/](solutions/) — internal, do not distribute.
->
-> **TA Internal Guide** (comprehensive, in English — setup, architecture, grading rubric, reference results, known issues, operations): [TA_INTERNAL_GUIDE.md](TA_INTERNAL_GUIDE.md) — internal, do not distribute
-
-> 此為 demo 版（各 TODO 皆為完整參考解）;學生發放版在 `hw3_template/`。
-
 ## Learning Objectives
 
 - **Grounding with Standard Robotics Ontologies**: Represent robot specifications and kinematic execution results as STRUCTURED RDF that reuses existing standard vocabularies — IEEE 1872 CORA robots, SOMA joints/joint-states/poses, IEEE 1872 POS positions, QUDT units — instead of ad-hoc strings. Symbol grounding turns execution numbers into machine-readable knowledge.
@@ -37,8 +31,8 @@ locally with PyBullet):
 
 ```bash
 cd hw3
-conda create --name taica-hw3 python=3.7 -y
-conda activate taica-hw3
+conda create --name physical-ai-hw3 python=3.7 -y
+conda activate physical-ai-hw3
 pip install pybullet numpy scipy
 ```
 
@@ -90,7 +84,7 @@ Design note: SHACL validates the **numbers** (thresholds on distances / residual
 **Step 1-4. Run and score with one command.**
 
 ```bash
-conda activate taica-hw3
+conda activate physical-ai-hw3
 bash semantic/run_task1.sh --student-id <your-student-id>
 ```
 
@@ -115,10 +109,65 @@ bash semantic/run_task1.sh --student-id <your-student-id> --own
 ```
 
 **Task 1 FAQ**
-- `python` is not the taica-hw3 environment → `PYTHON=~/miniconda3/envs/taica-hw3/bin/python bash semantic/run_task1.sh`
+- `python` is not the physical-ai-hw3 environment → `PYTHON=~/miniconda3/envs/physical-ai-hw3/bin/python bash semantic/run_task1.sh`
 - Jena download fails → manually extract apache-jena-4.10.0 and `export JENA_HOME=<path>` before running
 - S1 reports STRUCTURE violations → open `output/ta-validation.ttl`; each `sh:resultMessage` tells you which property/typing is missing (a bare `0.0892` instead of `"0.0892"^^xsd:double` is the classic one)
 - S3 mismatches → the grader prints `expected [...] , got [...]` per wrong case. Your `sh:message` must START with `ARM_OUT_OF_RANGE:` / `NO_CONVERGENCE:` / `JOINT_LIMIT_VIOLATION:` (prefix-matched); numeric thresholds must use `sh:maxInclusive` (records exactly at 0.90 / 0.02 / 0.005 are *conforming*), and the joint-limit SPARQL `FILTER` must use strict `<` / `>` (an angle exactly at a limit is legal)
+
+### Task 1 dataflow and mathematical model
+
+```mermaid
+flowchart TB
+    R["TA reference<br/>FK/IK executions"] --> G["Semantic grounding<br/>ground_execution.py"]
+    G --> D["output/data.ttl"]
+    D --> V["SHACL validation"]
+    S["student<br/>shapes.ttl"] --> V
+    P["TA 30-record<br/>probe dataset"] --> V
+    V --> O["validation reports"]
+```
+
+Let an RDF data graph be a finite triple set
+
+$$
+G \subseteq \mathcal N \times \mathcal P \times (\mathcal N \cup \mathcal L).
+$$
+
+Use $C(x) \Leftrightarrow (x,\texttt{rdf:type},C)\in G$ and
+$p(x,y) \Leftrightarrow (x,p,y)\in G$. Grounding is a serialization function
+
+$$
+\gamma:\mathcal E\rightarrow 2^G,\qquad
+G_{\mathrm{exec}}=G_{\mathrm{ontology}}\cup
+\bigcup_{e\in\mathcal E}\gamma(e).
+$$
+
+A structured joint configuration $c$ must satisfy
+
+$$
+\textsf{JointConfiguration}(c)\ \land\left|\{s:\textsf{hasJointState}(c,s)\}\right|=6,
+$$
+
+and each state must link to its joint and numeric position. Given shapes graph
+$S$ and data graph $G$,
+
+$$
+\operatorname{conforms}(S,G)
+\Leftrightarrow
+\operatorname{Report}(S,G)=\varnothing.
+$$
+
+The numerical conformance conditions are:
+
+| Formula | Meaning | Violation flag |
+|---|---|---|
+| $e_x\le 0.005$ for an FK computation | FK pose accuracy | `FK_INACCURATE` |
+| $d_x\le 0.90$ for an IK computation | arm reach | `ARM_OUT_OF_RANGE` |
+| $r_x\le 0.02$ for an IK computation | IK convergence | `NO_CONVERGENCE` |
+| $\ell_j\le q_s\le u_j$ for a joint state | joint limits | `JOINT_LIMIT_VIOLATION` |
+
+All inequalities are inclusive. Values exactly at a threshold or joint limit
+conform. The joint-limit violation query therefore uses
+`FILTER (?v < ?lo || ?v > ?hi)`.
 
 ## Task 2. Forward Kinematics (20 points)
 
@@ -178,10 +227,13 @@ Your IK/FK now drive a complete manipulation pipeline — no learned model, no
 downloads: a deterministic **Finite State Machine** ([fsm_task.py](fsm_task.py),
 TA-provided, no code change) runs 10 seeded pick-and-place episodes:
 
-```
-MOVE_TO_PREPICK -> DESCEND_TO_PICK -> GRASP -> LIFT
-    -> MOVE_TO_PREPLACE -> DESCEND_TO_PLACE -> RELEASE -> RETREAT
-    -> VERIFY -> SUCCESS / FAILURE
+```mermaid
+flowchart TB
+    A[MOVE_TO_PREPICK] --> B[DESCEND_TO_PICK] --> C[GRASP] --> D[LIFT]
+    D --> E[MOVE_TO_PREPLACE] --> F[DESCEND_TO_PLACE] --> G[RELEASE] --> H[RETREAT]
+    H --> I[VERIFY]
+    I -->|pass| J[SUCCESS]
+    I -->|fail| K[FAILURE]
 ```
 
 Every motion state performs **two validations**:
@@ -234,15 +286,166 @@ failure also carries its semantic flags (`NO_CONVERGENCE`, `ARM_OUT_OF_RANGE`,
 | Task 4: FSM pick-and-place success over 10 seeded episodes | 10 |
 | **Total** | **100** |
 
+## TA-only Detailed Deduction Guide
+
+Use the pristine grading scripts as the score authority. Record the command,
+case/episode, observed value, threshold, and points lost. Do not add a second
+manual deduction for an error already priced by a scorer.
+
+### Task 1 (30 points)
+
+- **S1 grounding structure (12):**
+  $S_1=\max(0,12-2n_{STRUCTURE})$. Every `STRUCTURE:` validation result
+  deducts 2 points; six or more reduce S1 to zero. Typical causes are missing
+  types/properties, wrong cardinality, non-`xsd:double` values, JSON strings
+  instead of structured nodes, missing joint links, and incorrect namespaces.
+  Quote the focus node and complete message from `output/ta-validation.ttl`.
+- **S2 expected detection (8):** four independent checks worth 2 each:
+  `target_mid` out of range, `target_far` out of range,
+  `target_near` clean, and no reference joint-limit violation.
+- **S3 probe agreement (10):**
+
+  $$
+  S_3=8\frac{n_{faulty\ correct}}{14}
+      +2\frac{n_{clean\ correct}}{16},
+  $$
+
+  rounded to one decimal. Each record requires exact flag-set equality: a
+  false positive, false negative, or missing second flag on a double-fault
+  record is a mismatch. Common causes include exclusive thresholds,
+  non-strict joint-limit filters, wrong target/path, and incorrect message
+  prefixes. Sanity gradients: correct 10.0; `maxExclusive` about 9.8;
+  non-strict joint filter about 9.9; empty TODO shapes about 3.7.
+
+### Task 2 (20 points)
+
+Pose and Jacobian are separate 10-point components. A pose fails when its
+7-vector L2 error is greater than 0.005; a Jacobian fails when its matrix L2
+error is greater than 0.05. Equality passes. For file $f$, with $F$ test files
+and $N_f$ cases, the implementation applies
+
+$$
+\delta_f=\frac{20/F}{0.3N_f}
+$$
+
+for each failed pose check and independently for each failed Jacobian check,
+with each per-file component floored at zero. If one case fails both checks,
+both deductions apply. Report both norms. Common causes: modified rather than
+classic D-H, base offset errors, quaternion order/sign, wrong frame axes,
+linear/angular row reversal, or editing the protected adjustment.
+
+### Task 3 (40 points)
+
+After returned joints execute, a case fails when achieved-pose L2 error is
+greater than 0.02 m. For file $f$,
+
+$$
+\delta_f^{IK}=\frac{40/F}{0.3N_f},
+$$
+
+with the per-file score floored at zero. Roughly 30% failures exhaust that
+file's share. Grading uses default arguments only. Typical deductions originate
+from unstable defaults, wrong orientation error, no warm start, missing joint
+clipping, singular updates, NaN/Inf, wrong output length, or a crash.
+
+### Task 4 (10 points)
+
+Ten deterministic episodes are worth one point each:
+$S_4=n_{success}$. An episode earns zero when its first terminating reason is:
+
+- `IK_MISS`: tracking error > 0.03 m;
+- `FK_MISMATCH`: student FK vs simulator error > 0.01 m;
+- `NO_CONTACT`: descent ends without suction contact;
+- `GRASP_FAILED`: suction constraint not created; or
+- `PLACE_MISS`: final block-to-goal XY error > 0.06 m.
+
+One failed episode loses exactly one point even if several diagnostic flags are
+printed. Rerun a contact/grasp/place failure once if physical flakiness is
+suspected; `IK_MISS` and `FK_MISMATCH` are deterministic.
+
+### Exceptional cases
+
+- Missing required file or reproducible student-code crash: zero only for the
+  task that cannot run, after ruling out the standard environment.
+- Extra files: no deduction; grade the four editable files in a clean template.
+- Protected-file edits: ignored by clean reassembly. Deliberate score/test
+  tampering or forbidden direct FK/IK APIs is documented and escalated, not
+  assigned an improvised penalty.
+- Post-score semantic diagnosis is informational for Tasks 2--4; a skipped
+  diagnosis does not change those scores.
+- There is no separate code-style score. Report, lateness, extension, and
+  integrity penalties require announced instructor policy.
+
+For each deduction, write: **task/component; command and case/episode; expected
+threshold/structure; observed value/message; points before/after; likely cause;
+file or report to inspect.**
+
 ## Submission
 
 1. `semantic/ground_execution.py` (with both TODO functions completed)
 2. `semantic/shapes.ttl` (with the three problem shapes completed)
 3. `fk.py` (with `your_fk` completed)
 4. `ik.py` (with `your_ik` completed)
-5. A short report: screenshots of all four tasks, plus an explanation of what your SHACL validation discovered in `output/validation.ttl` and in the TA dataset (`output/probe-validation.ttl`)
+5. `<group-id>_hw3_report.pdf`, following the required four-section format below
 
 > Note: `semantic/output/`, `semantic/store/`, and `semantic/.cache/` are auto-generated — do not submit them.
+
+## Required PDF Report Format
+
+Submit `<group-id>_hw3_report.pdf`. The cover must list the course, homework
+title, group ID, every member's student ID and name, and the submission date.
+Use exactly these four numbered top-level sections:
+
+### 1. Semantic Grounding and SHACL Validation
+
+1. **Grounding design:** explain both grounding TODO functions, reused
+   CORA/SOMA/POS/QUDT terms, structured nodes, and `xsd:double` values.
+2. **SHACL constraints:** give each target class, path, inclusive threshold,
+   flag prefix, and explain why joint limits require SHACL-SPARQL.
+3. **Evidence:** include a readable screenshot of the complete
+   `run_task1.sh` output showing S1, four S2 checks, S3 counts, and total /30.
+4. **Analysis:** interpret both `output/validation.ttl` and
+   `output/probe-validation.ttl`; discuss mid/far/near, one boundary record,
+   one joint-limit record, and any false positive/negative.
+
+### 2. Forward Kinematics and Geometric Jacobian
+
+1. **Method:** explain classic D-H transform composition, pose/quaternion,
+   base position, and the protected adjustment.
+2. **Jacobian:** derive
+   $J_{v,i}=z_{i-1}\times(p_e-p_{i-1})$ and $J_{\omega,i}=z_{i-1}$.
+3. **Evidence:** include the complete final `python fk.py` output, all test
+   files, both error counts, total /20, and semantic diagnosis.
+4. **Analysis:** tabulate per-file FK/Jacobian scores and error counts. For a
+   failure, report its norm, threshold, likely cause, and attempted fix.
+
+### 3. Inverse Kinematics
+
+1. **Method:** explain pose error, relative-rotation vector, damped least
+   squares, warm start, stopping condition, and joint-limit clipping.
+2. **Parameters:** report final default damping, step rate, maximum iterations,
+   and stopping threshold, with the reason for each choice.
+3. **Evidence:** include the complete final `python ik.py` output, per-file
+   mean/error count/score, total /40, and semantic diagnosis.
+4. **Analysis:** tabulate results and explain at least one difficulty, the
+   diagnostic evidence, and the final fix.
+
+### 4. FSM Manipulation Pipeline
+
+1. **Pipeline:** explain pick, grasp, transport, place, release, retreat, and
+   verification; identify where student IK and FK are used.
+2. **Evidence:** show all ten episode results, total /10, and semantic
+   diagnosis. Use multiple screenshots if needed for legibility.
+3. **Analysis:** report successes/failures and each failure's first state and
+   exact reason (`IK_MISS`, `FK_MISMATCH`, `NO_CONTACT`,
+   `GRASP_FAILED`, or `PLACE_MISS`).
+4. **Conclusion:** explain end-to-end agreement among semantics, FK, IK, and
+   FSM, then identify one limitation or concrete improvement.
+
+Number and caption every figure/table, cite it from the prose, keep terminal
+text readable, include units, and use selectable text for explanations.
+Screenshots alone are not a report. Each screenshot must show the command and
+results from the final submitted implementation.
 
 ## Reference
 
