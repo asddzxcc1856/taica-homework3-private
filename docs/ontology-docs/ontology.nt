@@ -1,7 +1,7 @@
 <http://taica.course/hw3/ontology> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
-<http://taica.course/hw3/ontology> <http://www.w3.org/2000/01/rdf-schema#comment> "Vocabulary for HW3 Task 1 (semantic grounding + SHACL validation): robot specifications and FK/IK execution processes (the solvers themselves are implemented in Tasks 2-3) represented as machine-readable knowledge. Design rule: REUSE existing vocabularies wherever a suitable term exists — IEEE 1872 CORA for robots, SOMA for joints / joint states / poses, IEEE 1872 POS for positions, DUL for upper-level alignment, QUDT for units — and mint hw3: terms only for course-specific concepts (kinematic computations, D-H parameters, statuses, distances) that no standard vocabulary covers."@en .
+<http://taica.course/hw3/ontology> <http://www.w3.org/2000/01/rdf-schema#comment> "Vocabulary for HW3 Task 1 (semantic grounding + SHACL validation): robot specifications and FK/IK execution processes (the solvers themselves are implemented in Tasks 2-3) represented as machine-readable knowledge. Design rule: REUSE existing vocabularies wherever a suitable term exists — IEEE 1872 CORA for robots, SOMA for joints / joint states / poses, IEEE 1872 POS for positions, QUDT for units — and mint hw3: terms only for course-specific concepts (kinematic computations, D-H parameters, statuses, distances) that no standard vocabulary covers."@en .
 <http://taica.course/hw3/ontology> <http://www.w3.org/2000/01/rdf-schema#label> "TAICA HW3 Robot Kinematics Evaluation Ontology"@en .
-<http://taica.course/hw3/ontology> <http://www.w3.org/2002/07/owl#versionInfo> "2026-fall-3.0" .
+<http://taica.course/hw3/ontology> <http://www.w3.org/2002/07/owl#versionInfo> "2026-fall-3.1" .
 # 
 # 
 # #################################################################
@@ -13,7 +13,6 @@
 # 
 # http://taica.course/hw3/ontology#computedForRobot
 <http://taica.course/hw3/ontology#computedForRobot> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-<http://taica.course/hw3/ontology#computedForRobot> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent> .
 <http://taica.course/hw3/ontology#computedForRobot> <http://www.w3.org/2000/01/rdf-schema#domain> <http://taica.course/hw3/ontology#KinematicComputation> .
 <http://taica.course/hw3/ontology#computedForRobot> <http://www.w3.org/2000/01/rdf-schema#range> <http://purl.org/ieee1872-owl/cora-bare#Robot> .
 <http://taica.course/hw3/ontology#computedForRobot> <http://www.w3.org/2000/01/rdf-schema#label> "computed for robot"@en .
@@ -34,7 +33,6 @@
 # 
 # http://taica.course/hw3/ontology#hasJoint
 <http://taica.course/hw3/ontology#hasJoint> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-<http://taica.course/hw3/ontology#hasJoint> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent> .
 <http://taica.course/hw3/ontology#hasJoint> <http://www.w3.org/2000/01/rdf-schema#domain> <http://purl.org/ieee1872-owl/cora-bare#Robot> .
 <http://taica.course/hw3/ontology#hasJoint> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.ease-crc.org/ont/SOMA.owl#Joint> .
 <http://taica.course/hw3/ontology#hasJoint> <http://www.w3.org/2000/01/rdf-schema#label> "has joint"@en .
@@ -48,7 +46,6 @@
 # 
 # http://taica.course/hw3/ontology#hasJointState
 <http://taica.course/hw3/ontology#hasJointState> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-<http://taica.course/hw3/ontology#hasJointState> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent> .
 <http://taica.course/hw3/ontology#hasJointState> <http://www.w3.org/2000/01/rdf-schema#domain> <http://taica.course/hw3/ontology#JointConfiguration> .
 <http://taica.course/hw3/ontology#hasJointState> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.ease-crc.org/ont/SOMA.owl#JointState> .
 <http://www.ease-crc.org/ont/SOMA.owl#JointState> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
@@ -78,22 +75,9 @@
 # 
 # http://taica.course/hw3/ontology#solvesForTarget
 <http://taica.course/hw3/ontology#solvesForTarget> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-<http://taica.course/hw3/ontology#solvesForTarget> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion> .
 <http://taica.course/hw3/ontology#solvesForTarget> <http://www.w3.org/2000/01/rdf-schema#domain> <http://taica.course/hw3/ontology#IKComputation> .
 <http://taica.course/hw3/ontology#solvesForTarget> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.ease-crc.org/ont/SOMA.owl#6DPose> .
 <http://taica.course/hw3/ontology#solvesForTarget> <http://www.w3.org/2000/01/rdf-schema#label> "solves for target"@en .
-# 
-# http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent
-<http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-<http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent> <http://www.w3.org/2000/01/rdf-schema#label> "has component (DUL)"@en .
-# 
-# http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion
-<http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-<http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion> <http://www.w3.org/2000/01/rdf-schema#label> "has region (DUL)"@en .
-# 
-# http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent
-<http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-<http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent> <http://www.w3.org/2000/01/rdf-schema#label> "involves agent (DUL)"@en .
 # 
 # 
 # 
@@ -270,7 +254,6 @@
 # 
 # http://taica.course/hw3/ontology#KinematicComputation
 <http://taica.course/hw3/ontology#KinematicComputation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-<http://taica.course/hw3/ontology#KinematicComputation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event> .
 <http://taica.course/hw3/ontology#KinematicComputation> <http://www.w3.org/2000/01/rdf-schema#label> "Kinematic Computation"@en .
 # 
 # http://taica.course/hw3/ontology#QuaternionOrientation
@@ -292,15 +275,6 @@
 # http://www.ease-crc.org/ont/SOMA.owl#6DPose
 <http://www.ease-crc.org/ont/SOMA.owl#6DPose> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
 <http://www.ease-crc.org/ont/SOMA.owl#6DPose> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://purl.org/ieee1872-owl/pos#Pose> .
-<http://www.ease-crc.org/ont/SOMA.owl#6DPose> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region> .
 <http://www.ease-crc.org/ont/SOMA.owl#6DPose> <http://www.w3.org/2000/01/rdf-schema#label> "6D Pose (SOMA)"@en .
-# 
-# http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event
-<http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-<http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event> <http://www.w3.org/2000/01/rdf-schema#label> "Event (DUL)"@en .
-# 
-# http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region
-<http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-<http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region> <http://www.w3.org/2000/01/rdf-schema#label> "Region (DUL)"@en .
 # 
 # Generated by the OWL API (version 5.1.18) https://github.com/owlcs/owlapi/

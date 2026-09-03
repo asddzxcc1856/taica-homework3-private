@@ -17,7 +17,7 @@
 
 
 <!-- SCHEMA.ORG METADATA -->
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","url":"http://taica.course/hw3/ontology","image":"http://vowl.visualdataweb.org/webvowl/#iri=http://taica.course/hw3/ontology","name":"http://taica.course/hw3/ontology", "headline":"Document describing the ontology http://taica.course/hw3/ontology", "dateReleased":"Thu Sep 03 12:38:34 CST 2026", "version":"2026-fall-3.0"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","url":"http://taica.course/hw3/ontology","image":"http://vowl.visualdataweb.org/webvowl/#iri=http://taica.course/hw3/ontology","name":"http://taica.course/hw3/ontology", "headline":"Document describing the ontology http://taica.course/hw3/ontology", "dateReleased":"Thu Sep 03 12:58:15 CST 2026", "version":"2026-fall-3.1"}</script>
 
 <script src="resources/jquery.js"></script> 
 <script src="resources/marked.min.js"></script> 
@@ -69,10 +69,10 @@ $(function(){
 
 <dl>
 <dt>Revision:</dt>
-<dd>2026-fall-3.0</dd>
+<dd>2026-fall-3.1</dd>
 <dt>Download serialization:</dt><dd><span><a href="ontology.jsonld" target="_blank"><img src="https://img.shields.io/badge/Format-JSON_LD-blue.svg" alt="JSON-LD" /></a> </span><span><a href="ontology.owl" target="_blank"><img src="https://img.shields.io/badge/Format-RDF/XML-blue.svg" alt="RDF/XML" /></a> </span><span><a href="ontology.nt" target="_blank"><img src="https://img.shields.io/badge/Format-N_Triples-blue.svg" alt="N-Triples" /></a> </span><span><a href="ontology.ttl" target="_blank"><img src="https://img.shields.io/badge/Format-TTL-blue.svg" alt="TTL" /></a> </span></dd><dt>License:</dt><dd><a href="http://insertlicenseURIhere.example.org" target="_blank"><img src="https://img.shields.io/badge/License-license%20name%20goes%20here-blue.svg" alt="http://insertlicenseURIhere.example.org" /></a>
 </dd><!-- <dt>Evaluation:</dt><dd><a href="OOPSevaluation/oopsEval.html#" target="_blank"><img src="https://img.shields.io/badge/Evaluate_with-OOPS! (OntOlogy Pitfall Scanner!)-blue.svg" alt="Evaluate with OOPS!" /></a></dd> --><dt>Cite as:</dt>
-<dd> Revision: 2026-fall-3.0.</dd>
+<dd> Revision: 2026-fall-3.1.</dd>
 </dl>
 
 <a href="provenance/provenance-en.html" target="_blank">Provenance of this page</a><hr/>
@@ -105,10 +105,6 @@ This ontology has the following classes and properties.</span>
       <a href="#http://www.ease-crc.org/ont/SOMA.owl#6DPose" title="http://www.ease-crc.org/ont/SOMA.owl#6DPose">6D Pose (SOMA)</a>
    </li>
    <li>
-      <a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event"
-         title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event">Event (DUL)</a>
-   </li>
-   <li>
       <a href="#FKComputation" title="http://taica.course/hw3/ontology#FKComputation">Forward Kinematics Computation</a>
    </li>
    <li>
@@ -130,10 +126,6 @@ This ontology has the following classes and properties.</span>
          title="http://taica.course/hw3/ontology#QuaternionOrientation">Quaternion Orientation (x, y, z, w)</a>
    </li>
    <li>
-      <a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region"
-         title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region">Region (DUL)</a>
-   </li>
-   <li>
       <a href="#http://www.ease-crc.org/ont/SOMA.owl#RevoluteJoint"
          title="http://www.ease-crc.org/ont/SOMA.owl#RevoluteJoint">Revolute Joint (SOMA)</a>
    </li>
@@ -149,10 +141,6 @@ This ontology has the following classes and properties.</span>
    <li>
       <a href="#hasJointConfiguration"
          title="http://taica.course/hw3/ontology#hasJointConfiguration">has (output) joint configuration</a>
-   </li>
-   <li>
-      <a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent"
-         title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent">has component (DUL)</a>
    </li>
    <li>
       <a href="#hasEndEffectorPose"
@@ -175,14 +163,6 @@ This ontology has the following classes and properties.</span>
    <li>
       <a href="#hasPositionComponent"
          title="http://taica.course/hw3/ontology#hasPositionComponent">has position component</a>
-   </li>
-   <li>
-      <a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion"
-         title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion">has region (DUL)</a>
-   </li>
-   <li>
-      <a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent"
-         title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent">involves agent (DUL)</a>
    </li>
    <li>
       <a href="#isStateOfJoint" title="http://taica.course/hw3/ontology#isStateOfJoint">is state of joint</a>
@@ -268,7 +248,7 @@ This ontology has the following classes and properties.</span>
 <!--DESCRIPTION SECTION-->
     <div id="description"><h2 id="desc" class="list">TAICA HW3 Robot Kinematics Evaluation Ontology: Description <span class="backlink"> back to <a href="#toc">ToC</a></span></h2>
 
-<span class="markdown">Vocabulary for HW3 Task 1 (semantic grounding + SHACL validation): robot specifications and FK/IK execution processes (the solvers themselves are implemented in Tasks 2-3) represented as machine-readable knowledge. Design rule: REUSE existing vocabularies wherever a suitable term exists — IEEE 1872 CORA for robots, SOMA for joints / joint states / poses, IEEE 1872 POS for positions, DUL for upper-level alignment, QUDT for units — and mint hw3: terms only for course-specific concepts (kinematic computations, D-H parameters, statuses, distances) that no standard vocabulary covers.</span></div>
+<span class="markdown">Vocabulary for HW3 Task 1 (semantic grounding + SHACL validation): robot specifications and FK/IK execution processes (the solvers themselves are implemented in Tasks 2-3) represented as machine-readable knowledge. Design rule: REUSE existing vocabularies wherever a suitable term exists — IEEE 1872 CORA for robots, SOMA for joints / joint states / poses, IEEE 1872 POS for positions, QUDT for units — and mint hw3: terms only for course-specific concepts (kinematic computations, D-H parameters, statuses, distances) that no standard vocabulary covers.</span></div>
    
 
 <!--CROSSREF SECTION-->
@@ -278,14 +258,12 @@ This section provides details for each class and property defined by TAICA HW3 R
  <h3 id="classes-headline" class="list">Classes</h3>
  <ul class="hlist">
   <li><a href="#http://www.ease-crc.org/ont/SOMA.owl#6DPose" title="http://www.ease-crc.org/ont/SOMA.owl#6DPose">6D Pose (SOMA)</a></li>
-  <li><a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event" title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event">Event (DUL)</a></li>
   <li><a href="#FKComputation" title="http://taica.course/hw3/ontology#FKComputation">Forward Kinematics Computation</a></li>
   <li><a href="#IKComputation" title="http://taica.course/hw3/ontology#IKComputation">Inverse Kinematics Computation</a></li>
   <li><a href="#http://www.ease-crc.org/ont/SOMA.owl#Joint" title="http://www.ease-crc.org/ont/SOMA.owl#Joint">Joint (SOMA)</a></li>
   <li><a href="#JointConfiguration" title="http://taica.course/hw3/ontology#JointConfiguration">Joint Configuration</a></li>
   <li><a href="#KinematicComputation" title="http://taica.course/hw3/ontology#KinematicComputation">Kinematic Computation</a></li>
   <li><a href="#QuaternionOrientation" title="http://taica.course/hw3/ontology#QuaternionOrientation">Quaternion Orientation (x, y, z, w)</a></li>
-  <li><a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region" title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region">Region (DUL)</a></li>
   <li><a href="#http://www.ease-crc.org/ont/SOMA.owl#RevoluteJoint" title="http://www.ease-crc.org/ont/SOMA.owl#RevoluteJoint">Revolute Joint (SOMA)</a></li>
   <li><a href="#http://purl.org/ieee1872-owl/cora-bare#Robot" title="http://purl.org/ieee1872-owl/cora-bare#Robot">Robot (IEEE 1872 CORA)</a></li>
  </ul>
@@ -297,25 +275,13 @@ This section provides details for each class and property defined by TAICA HW3 R
     has super-classes
    </dt>
    <dd>
-    <a href="http://purl.org/ieee1872-owl/pos#Pose" target="_blank" title="http://purl.org/ieee1872-owl/pos#Pose">Pose</a> <sup class="type-c" title="class">c</sup>, <a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region" title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region">Region (DUL)</a> <sup class="type-c" title="class">c</sup>
+    <a href="http://purl.org/ieee1872-owl/pos#Pose" target="_blank" title="http://purl.org/ieee1872-owl/pos#Pose">Pose</a> <sup class="type-c" title="class">c</sup>
    </dd>
    <dt>
     is in range of
    </dt>
    <dd>
     <a href="#hasEndEffectorPose" title="http://taica.course/hw3/ontology#hasEndEffectorPose">has end effector pose</a> <sup class="type-op" title="object property">op</sup>, <a href="#solvesForTarget" title="http://taica.course/hw3/ontology#solvesForTarget">solves for target</a> <sup class="type-op" title="object property">op</sup>
-   </dd>
-  </dl>
- </div>
- <div class="entity" id="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event">
-  <h3>Event (DUL)<sup class="type-c" title="class">c</sup> <span class="backlink"> back to <a href="#toc">ToC</a> or <a href="#classes">Class ToC</a> </span></h3>
-  <p><strong>IRI:</strong> http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event</p>
-  <dl class="description">
-   <dt>
-    has sub-classes
-   </dt>
-   <dd>
-    <a href="#KinematicComputation" title="http://taica.course/hw3/ontology#KinematicComputation">Kinematic Computation</a> <sup class="type-c" title="class">c</sup>
    </dd>
   </dl>
  </div>
@@ -405,12 +371,6 @@ This section provides details for each class and property defined by TAICA HW3 R
   <p><strong>IRI:</strong> http://taica.course/hw3/ontology#KinematicComputation</p>
   <dl class="description">
    <dt>
-    has super-classes
-   </dt>
-   <dd>
-    <a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event" title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Event">Event (DUL)</a> <sup class="type-c" title="class">c</sup>
-   </dd>
-   <dt>
     has sub-classes
    </dt>
    <dd>
@@ -439,18 +399,6 @@ This section provides details for each class and property defined by TAICA HW3 R
    </dt>
    <dd>
     <a href="#hasQuatW" title="http://taica.course/hw3/ontology#hasQuatW">quaternion w</a> <sup class="type-dp" title="data property">dp</sup>, <a href="#hasQuatX" title="http://taica.course/hw3/ontology#hasQuatX">quaternion x</a> <sup class="type-dp" title="data property">dp</sup>, <a href="#hasQuatY" title="http://taica.course/hw3/ontology#hasQuatY">quaternion y</a> <sup class="type-dp" title="data property">dp</sup>, <a href="#hasQuatZ" title="http://taica.course/hw3/ontology#hasQuatZ">quaternion z</a> <sup class="type-dp" title="data property">dp</sup>
-   </dd>
-  </dl>
- </div>
- <div class="entity" id="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region">
-  <h3>Region (DUL)<sup class="type-c" title="class">c</sup> <span class="backlink"> back to <a href="#toc">ToC</a> or <a href="#classes">Class ToC</a> </span></h3>
-  <p><strong>IRI:</strong> http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#Region</p>
-  <dl class="description">
-   <dt>
-    has sub-classes
-   </dt>
-   <dd>
-    <a href="#http://www.ease-crc.org/ont/SOMA.owl#6DPose" title="http://www.ease-crc.org/ont/SOMA.owl#6DPose">6D Pose (SOMA)</a> <sup class="type-c" title="class">c</sup>
    </dd>
   </dl>
  </div>
@@ -489,15 +437,12 @@ This section provides details for each class and property defined by TAICA HW3 R
  <ul class="hlist">
   <li><a href="#computedForRobot" title="http://taica.course/hw3/ontology#computedForRobot">computed for robot</a></li>
   <li><a href="#hasJointConfiguration" title="http://taica.course/hw3/ontology#hasJointConfiguration">has (output) joint configuration</a></li>
-  <li><a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent" title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent">has component (DUL)</a></li>
   <li><a href="#hasEndEffectorPose" title="http://taica.course/hw3/ontology#hasEndEffectorPose">has end effector pose</a></li>
   <li><a href="#hasInputJointConfiguration" title="http://taica.course/hw3/ontology#hasInputJointConfiguration">has input joint configuration</a></li>
   <li><a href="#hasJoint" title="http://taica.course/hw3/ontology#hasJoint">has joint</a></li>
   <li><a href="#hasJointState" title="http://taica.course/hw3/ontology#hasJointState">has joint state</a></li>
   <li><a href="#hasOrientationComponent" title="http://taica.course/hw3/ontology#hasOrientationComponent">has orientation component</a></li>
   <li><a href="#hasPositionComponent" title="http://taica.course/hw3/ontology#hasPositionComponent">has position component</a></li>
-  <li><a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion" title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion">has region (DUL)</a></li>
-  <li><a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent" title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent">involves agent (DUL)</a></li>
   <li><a href="#isStateOfJoint" title="http://taica.course/hw3/ontology#isStateOfJoint">is state of joint</a></li>
   <li><a href="#solvesForTarget" title="http://taica.course/hw3/ontology#solvesForTarget">solves for target</a></li>
  </ul>
@@ -506,12 +451,6 @@ This section provides details for each class and property defined by TAICA HW3 R
   <p><strong>IRI:</strong> http://taica.course/hw3/ontology#computedForRobot</p>
   <div class="description">
    <dl>
-    <dt>
-     has super-properties
-    </dt>
-    <dd>
-     <a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent" title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent">involves agent (DUL)</a> <sup class="type-op" title="object property">op</sup>
-    </dd>
     <dt>
      has domain
     </dt>
@@ -546,20 +485,6 @@ This section provides details for each class and property defined by TAICA HW3 R
     </dt>
     <dd>
      <a href="#JointConfiguration" title="http://taica.course/hw3/ontology#JointConfiguration">Joint Configuration</a> <sup class="type-c" title="class">c</sup>
-    </dd>
-   </dl>
-  </div>
- </div>
- <div class="entity" id="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent">
-  <h3>has component (DUL)<sup class="type-op" title="object property">op</sup> <span class="backlink"> back to <a href="#toc">ToC</a> or <a href="#objectproperties">Object Property ToC</a> </span></h3>
-  <p><strong>IRI:</strong> http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent</p>
-  <div class="description">
-   <dl>
-    <dt>
-     has sub-properties
-    </dt>
-    <dd>
-     <a href="#hasJoint" title="http://taica.course/hw3/ontology#hasJoint">has joint</a> <sup class="type-op" title="object property">op</sup>, <a href="#hasJointState" title="http://taica.course/hw3/ontology#hasJointState">has joint state</a> <sup class="type-op" title="object property">op</sup>
     </dd>
    </dl>
   </div>
@@ -616,12 +541,6 @@ This section provides details for each class and property defined by TAICA HW3 R
   <div class="description">
    <dl>
     <dt>
-     has super-properties
-    </dt>
-    <dd>
-     <a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent" title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent">has component (DUL)</a> <sup class="type-op" title="object property">op</sup>
-    </dd>
-    <dt>
      has domain
     </dt>
     <dd>
@@ -641,12 +560,6 @@ This section provides details for each class and property defined by TAICA HW3 R
   <p><strong>IRI:</strong> http://taica.course/hw3/ontology#hasJointState</p>
   <div class="description">
    <dl>
-    <dt>
-     has super-properties
-    </dt>
-    <dd>
-     <a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent" title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasComponent">has component (DUL)</a> <sup class="type-op" title="object property">op</sup>
-    </dd>
     <dt>
      has domain
     </dt>
@@ -702,34 +615,6 @@ This section provides details for each class and property defined by TAICA HW3 R
    </dl>
   </div>
  </div>
- <div class="entity" id="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion">
-  <h3>has region (DUL)<sup class="type-op" title="object property">op</sup> <span class="backlink"> back to <a href="#toc">ToC</a> or <a href="#objectproperties">Object Property ToC</a> </span></h3>
-  <p><strong>IRI:</strong> http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion</p>
-  <div class="description">
-   <dl>
-    <dt>
-     has sub-properties
-    </dt>
-    <dd>
-     <a href="#solvesForTarget" title="http://taica.course/hw3/ontology#solvesForTarget">solves for target</a> <sup class="type-op" title="object property">op</sup>
-    </dd>
-   </dl>
-  </div>
- </div>
- <div class="entity" id="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent">
-  <h3>involves agent (DUL)<sup class="type-op" title="object property">op</sup> <span class="backlink"> back to <a href="#toc">ToC</a> or <a href="#objectproperties">Object Property ToC</a> </span></h3>
-  <p><strong>IRI:</strong> http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#involvesAgent</p>
-  <div class="description">
-   <dl>
-    <dt>
-     has sub-properties
-    </dt>
-    <dd>
-     <a href="#computedForRobot" title="http://taica.course/hw3/ontology#computedForRobot">computed for robot</a> <sup class="type-op" title="object property">op</sup>
-    </dd>
-   </dl>
-  </div>
- </div>
  <div class="entity" id="isStateOfJoint">
   <h3>is state of joint<sup class="type-op" title="object property">op</sup> <span class="backlink"> back to <a href="#toc">ToC</a> or <a href="#objectproperties">Object Property ToC</a> </span></h3>
   <p><strong>IRI:</strong> http://taica.course/hw3/ontology#isStateOfJoint</p>
@@ -758,12 +643,6 @@ This section provides details for each class and property defined by TAICA HW3 R
   <p><strong>IRI:</strong> http://taica.course/hw3/ontology#solvesForTarget</p>
   <div class="description">
    <dl>
-    <dt>
-     has super-properties
-    </dt>
-    <dd>
-     <a href="#http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion" title="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#hasRegion">has region (DUL)</a> <sup class="type-op" title="object property">op</sup>
-    </dd>
     <dt>
      has domain
     </dt>
