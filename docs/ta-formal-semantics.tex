@@ -119,29 +119,28 @@ reused standards, but by Def.~\ref{def:pred} they play
 no role in validation. The serializers therefore always assert the most specific
 class expected by the shapes.
 
-\subsection{Object properties $\mathbf{P}_o$ (with signatures $p \subseteq C \times D$)}
+\subsection{Object properties $\mathbf{P}_o$}
 
 \begin{center}\small
 \begin{tabular}{@{}lll@{}}
 \toprule
-Property & Signature & Super-property \\
+Property & Domain & Range \\
 \midrule
-$\IRI{hw3{:}hasJoint}$ & $\IRI{cora{:}Robot} \times \IRI{soma{:}Joint}$ & \\
-$\IRI{hw3{:}computedForRobot}$ & $\IRI{hw3{:}KinematicComputation} \times \IRI{cora{:}Robot}$ & \\
-$\IRI{hw3{:}solvesForTarget}$ & $\IRI{hw3{:}IKComputation} \times \IRI{soma{:}6DPose}$ & \\
-$\IRI{hw3{:}hasInputJointConfiguration}$ & $\IRI{hw3{:}FKComputation} \times \IRI{hw3{:}JointConfiguration}$ & \\
-$\IRI{hw3{:}hasJointConfiguration}$ & $\IRI{hw3{:}IKComputation} \times \IRI{hw3{:}JointConfiguration}$ & \\
-$\IRI{hw3{:}hasEndEffectorPose}$ & $\IRI{hw3{:}KinematicComputation} \times \IRI{soma{:}6DPose}$ & \\
-$\IRI{hw3{:}hasJointState}$ & $\IRI{hw3{:}JointConfiguration} \times \IRI{soma{:}JointState}$ & \\
-$\IRI{hw3{:}isStateOfJoint}$ & $\IRI{soma{:}JointState} \times \IRI{soma{:}Joint}$ & \\
-$\IRI{hw3{:}hasPositionComponent}$ & $\IRI{pos{:}Pose} \times \IRI{pos{:}Position}$ & \\
-$\IRI{hw3{:}hasOrientationComponent}$ & $\IRI{pos{:}Pose} \times \IRI{pos{:}Orientation}$ & \\
-$\IRI{qudt{:}hasUnit}$ & (any) $\times\ \{\IRI{unit{:}M}, \IRI{unit{:}RAD}\}$ & \\
-\bottomrule
-\end{tabular}
+$\IRI{hw3{:}hasJoint}$ & $\IRI{cora{:}Robot}$ & $\IRI{soma{:}Joint}$ \\
+$\IRI{hw3{:}computedForRobot}$ & $\IRI{hw3{:}KinematicComputation}$ & $\IRI{cora{:}Robot}$ \\
+$\IRI{hw3{:}solvesForTarget}$ & $\IRI{hw3{:}IKComputation}$ & $\IRI{soma{:}6DPose}$ \\
+$\IRI{hw3{:}hasInputJointConfiguration}$ & $\IRI{hw3{:}FKComputation}$ & $\IRI{hw3{:}JointConfiguration}$ \\
+$\IRI{hw3{:}hasJointConfiguration}$ & $\IRI{hw3{:}IKComputation}$ & $\IRI{hw3{:}JointConfiguration}$ \\
+$\IRI{hw3{:}hasEndEffectorPose}$ & $\IRI{hw3{:}KinematicComputation}$ & $\IRI{soma{:}6DPose}$ \\
+$\IRI{hw3{:}hasJointState}$ & $\IRI{hw3{:}JointConfiguration}$ & $\IRI{soma{:}JointState}$ \\
+$\IRI{hw3{:}isStateOfJoint}$ & $\IRI{soma{:}JointState}$ & $\IRI{soma{:}Joint}$ \\
+$\IRI{hw3{:}hasPositionComponent}$ & $\IRI{pos{:}Pose}$ & $\IRI{pos{:}Position}$ \\
+$\IRI{hw3{:}hasOrientationComponent}$ & $\IRI{pos{:}Pose}$ & $\IRI{pos{:}Orientation}$ \\
+$\IRI{qudt{:}hasUnit}$ & (any) & $\{\IRI{unit{:}M}, \IRI{unit{:}RAD}\}$ \\
+\bottomrule\end{tabular}
 \end{center}
 
-\subsection{Datatype properties $\mathbf{P}_d$ (with signatures $p \subseteq C \times \mathit{val}(d)$)}
+\subsection{Datatype properties $\mathbf{P}_d$}
 
 \begin{center}\footnotesize
 \begin{tabular}{@{}llll@{}}
@@ -160,8 +159,7 @@ $\IRI{hw3{:}hasPoseError},\ \IRI{hw3{:}hasJacobianError}$ & $\IRI{hw3{:}FKComput
 $\IRI{hw3{:}hasPositionX/Y/Z}$ & $\IRI{pos{:}Position}$ & \dbl & \textsf{STRUCTURE} \\
 $\IRI{hw3{:}hasQuatX/Y/Z/W}$ & $\IRI{hw3{:}QuaternionOrientation}$ & \dbl & --- \\
 $\IRI{hw3{:}producedBy}$ & (any) & \IRI{xsd{:}string} & provenance \\
-\bottomrule
-\end{tabular}
+\bottomrule\end{tabular}
 \end{center}
 
 % ============================================================================
